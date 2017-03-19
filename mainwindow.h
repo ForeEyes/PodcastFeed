@@ -4,6 +4,13 @@
 #include <QMainWindow>
 #include <QInputDialog>
 
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
 namespace Ui {
 class MainWindow;
 }
@@ -28,10 +35,14 @@ private slots:
 
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
 
-    bool getRSSurl(QString itunesLink, QString &rssLink);
+    void getRSSurl(QString itunesLink);
+
+    void parseItunesReply(QNetworkReply *reply);
 
 private:
     Ui::MainWindow *ui;
+
+    QNetworkAccessManager manager;
 };
 
 #endif // MAINWINDOW_H
