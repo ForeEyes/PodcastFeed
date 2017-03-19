@@ -20,14 +20,15 @@ void MainWindow::on_actionUsing_Itunes_Link_triggered()
     //Bool to tell if user clicked ok on dialog.
     bool ok;
     //call the Podcast dialog function and pass the label, and window title
-    QString Itunes_Link = addPodcast_dlg("Itunes Link:", "Add Podcast using Itunes Link", ok);
+    QString itunesLink = addPodcast_dlg("Itunes Link:", "Add Podcast using Itunes Link", ok);
     //Variable for storing rss link.
     QString rssLink;
     //Check if user clicked ok and it the string is empty
-    if(ok && !Itunes_Link.isEmpty()){
+    if(ok && !itunesLink.isEmpty()){
         //Pass Itunes Link & Reference of FeedURL to getRSSurl
         //function return true if it was able to get the rss link
-        if(getRSSurl(Itunes_Link, rssLink)){
+        if(getRSSurl(itunesLink, rssLink)){
+            //Call addPodcast function and pass rss link
 
         }
 
@@ -38,6 +39,14 @@ void MainWindow::on_actionUsing_Itunes_Link_triggered()
 
 void MainWindow::on_actionUsing_RSS_Link_triggered()
 {
+    //Bool to tell if user clicked ok on dialog.
+    bool ok;
+    //call the Podcast dialog function and pass the label, and window title
+    QString rssLink = addPodcast_dlg("RSS Link:", "Add Podcast using RSS Link", ok);
+    //Check if user clicked ok and it the string is empty
+    if(ok && !rssLink.isEmpty()){
+        //Call addPodcast function and pass rss link
+    }
 
 }
 

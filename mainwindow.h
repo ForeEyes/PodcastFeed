@@ -28,7 +28,7 @@ private slots:
 
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
 
-    bool getRSSurl(QString itunesLink,QString &rssLink);
+    bool getRSSurl(QString itunesLink, QString &rssLink);
 
 private:
     Ui::MainWindow *ui;
