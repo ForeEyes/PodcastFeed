@@ -37,6 +37,7 @@ void MainWindow::on_actionUsing_Itunes_Link_triggered()
     //call the Podcast dialog function and pass the label, and window title
     QString itunesLink = addPodcast_dlg("Itunes Link:", "Add Podcast using Itunes Link", ok);
     //Check if user clicked ok and it the string is empty
+    
     if(ok && !itunesLink.isEmpty()){
         //Pass Itunes Link to getRSSurl
         //function will then get the rss url and call addPodcast Function
