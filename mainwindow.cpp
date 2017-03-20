@@ -8,6 +8,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     //Disable the resize grip on the lower right corner
     ui->statusBar->setSizeGripEnabled(false);
+
+
+    //Check if Appdata folders exit, and create them if not
+    if(!QDir().exists(AppDataFolder)){
+        QDir().mkdir(AppDataFolder);
+    }
+
+    if(!QDir().exists(xmlFolder)){
+        QDir().mkdir(xmlFolder);
+    }
+
+    if(!QDir().exists(IconFolder)){
+        QDir().mkdir(IconFolder);
+    }
+
 }
 
 MainWindow::~MainWindow()
@@ -39,6 +54,7 @@ void MainWindow::on_actionUsing_RSS_Link_triggered()
     //Check if user clicked ok and it the string is empty
     if(ok && !rssLink.isEmpty()){
         //Call addPodcast function and pass rss link
+        addPodcast(rssLink);
     }
 }
 
@@ -95,10 +111,12 @@ void MainWindow::getRSSurl(QString itunesLink){
         }
         //Create the request url using the podcast id
         QUrl url("https://itunes.apple.com/lookup?id=" + PodcastID + "&entity=podcast");
+        //create new network manager
+        manager = new QNetworkAccessManager();
         //When the http request is finished, call the parseItunesReply function
-        QObject::connect(&manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(parseItunesReply(QNetworkReply*)));
+        QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(parseItunesReply(QNetworkReply*)));
         //http request
-        manager.get(QNetworkRequest(url));
+        manager->get(QNetworkRequest(url));
 
     }
 }
@@ -116,7 +134,7 @@ void MainWindow::parseItunesReply(QNetworkReply *reply){
                         .toObject().value("feedUrl").toString();
 
         //Call addPodcast function and pass rss link
-
+        addPodcast(rssLink);
 
         reply->deleteLater();
     }
@@ -125,4 +143,115 @@ void MainWindow::parseItunesReply(QNetworkReply *reply){
         ui->statusBar->showMessage("Network Request Failed..." + reply->errorString(), 3000);
         reply->deleteLater();
     }
+}
+
+void MainWindow::addPodcast(QString rssLink){
+    //Create a event loop to keep everythin inline, rather than using other functions.
+    QEventLoop eventLoop;
+    //create new network manager
+    manager = new QNetworkAccessManager();
+    //When the http request is finished, end the eventloop
+    QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+    //Make the http request and store as a QNetworkReply Object
+    QNetworkReply *reply = manager->get(QNetworkRequest(QUrl(rssLink)));
+    //Start the loop
+    eventLoop.exec();
+
+    QString podcastName, podcastIconURL;
+    bool nameReached = false, iconReached = false;
+
+    //check if reply is not xml or if there is an error
+    if (reply->error() == QNetworkReply::NoError && reply->header(QNetworkRequest::ContentTypeHeader).toString().contains("xml")){
+        QByteArray rawReply = reply->readAll();
+        //Create a xml parser object
+        QXmlStreamReader podcastXml;
+        //Pass the reply to the xml parser
+        podcastXml.addData(rawReply);
+        //Loop until end of xml doc
+        while(!podcastXml.atEnd() && !podcastXml.hasError()) {
+            // Read next element
+            QXmlStreamReader::TokenType token = podcastXml.readNext();
+            //If token is just StartDocument - go to next
+            if(token == QXmlStreamReader::StartDocument) {
+                    continue;
+            }
+            //If token is StartElement - read it
+            if(token == QXmlStreamReader::StartElement){
+                //If the element name is title and is the first title element, save it
+                if(podcastXml.name() == "title" && !nameReached){
+                    podcastName = podcastXml.readElementText();
+                    nameReached = true;
+                }
+                //If the element name is image and is the first image element, save the url
+                if(podcastXml.qualifiedName() == "itunes:image" && !iconReached){
+                    podcastIconURL = podcastXml.attributes().value("href").toString();
+                    iconReached = true;
+                }
+                //If both name and icon url have been parsed, then break loop
+                if(nameReached && iconReached){
+                    break;
+                }
+            }
+        }
+
+        storeXmlFile(podcastName, rawReply);
+        storeIcon(podcastName, podcastIconURL);
+
+    } else {
+        //reply error or reply is not xml
+        ui->statusBar->showMessage("RSS Link Invalid or Request Failed", 3000);
+        reply->deleteLater();
+    }
+}
+
+void MainWindow::storeXmlFile(QString podcastName, QByteArray rawReply){
+    //Podcast xml file path
+    QString podcastFile = xmlFolder + "/" + podcastName + ".xml";
+
+    QFile xmlfile(podcastFile);
+    //Open the file and write the data to it
+    if (xmlfile.open(QFile::WriteOnly) )
+    {
+        xmlfile.write(rawReply);
+    } else {
+        ui->statusBar->showMessage("Error Saving xml file", 3000);
+    }
+
+    //close file
+    xmlfile.close();
+}
+
+void MainWindow::storeIcon(QString podcastName, QString iconURL){
+    //Create a event loop to keep everythin inline, rather than using other functions.
+    QEventLoop eventLoop;
+    //create new network manager
+    manager = new QNetworkAccessManager();
+    //When the http request is finished, end the eventloop
+    QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+    //Make the http request and store as a QNetworkReply Object
+    QNetworkReply *reply = manager->get(QNetworkRequest(QUrl(iconURL)));
+    //Start the loop
+    eventLoop.exec();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        //Icon File Path
+        QString IconPath = IconFolder + "/" + podcastName + ".bmp";
+        //using QImage to convert from unknown format to bmp
+        QImage icon;
+        //load reply data into icon
+        icon.loadFromData(reply->readAll());
+        //unless icon data is null store image as bmp at the given path
+        if(icon.isNull()){
+           statusBar()->showMessage("Cannot Store Icon", 3000);
+        } else {
+            icon.save(IconPath);
+        }
+
+        reply->deleteLater();
+    } else {
+        //Failed to get icon
+        statusBar()->showMessage("Failed to store podcast icon", 3000);
+        reply->deleteLater();
+    }
+
 }
