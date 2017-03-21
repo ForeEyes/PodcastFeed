@@ -141,9 +141,9 @@ void MainWindow::updateUIPodcastList(){
         foreach (const QJsonValue & value, jsonArray) {
             QJsonObject obj = value.toObject();
             //icon path for current podcast
-            QIcon iconPath = iconFolder + "/" + obj["podcastName"].toString() + ".bmp";
+            QString iconPath = iconFolder + "/" + obj["podcastName"].toString() + ".bmp";
             //add the podcast and its icon to the podcast list widget.
-            new QListWidgetItem(iconPath,obj["podcastName"].toString(), ui->PodcastList);
+            new QListWidgetItem(QIcon(iconPath),obj["podcastName"].toString(), ui->PodcastList);
         }
         jsonFile.close();
     }
