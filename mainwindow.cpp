@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Populate the widgets
     updateUIPodcastList();
+    populatePodcasts();
 
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
@@ -450,4 +451,72 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     //If the podcast is not found return false
     jsonFile.close();
     return false;
+}
+
+void MainWindow::on_playButton_clicked()
+{
+/* Purpose: Invoke the QMediaPlayer object to play or pause an audio file as chosen by a user.
+ *
+ * Author: Uzair Shamim
+ */
+
+    // Get the values selected by the user, this should work regardless of if the widget is model or item based
+    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
+
+    // User selected an episode AND the player is not currently playing any audio
+    if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
+        QString selection = list[0].data().toString();
+        QString URL = getURL(selection);
+        playAudio(URL);
+
+    // Player is paused but the user now clicked the play button to start audio playback
+    }else if(player->state() == QMediaPlayer::PausedState){
+        player->play();
+        ui->playButton->setText("Pause");
+
+    // Player is playing audio but user now clicked the pause button to pause the audio
+    }else if(player->state() == QMediaPlayer::PlayingState){
+        player->pause();
+        ui->playButton->setText("Play");
+    }
+}
+
+void MainWindow::playAudio(QString URL)
+{
+/* Purpose: Initialize the media player (QMediaPlayer object) with a QString URL provided by the user.
+ *          After execution of this function the user should be able to hear audio of the chosen file the linked.
+ *          This function should be able to play both local and non-local files as it uses a QUrl and the QMediaPlayer::setMedia() method to parse the path.
+ *
+ * Author: Uzair Shamim
+ */
+
+    player->setMedia(QUrl(URL));
+    player->setVolume(50);
+    player->play();
+    ui->playButton->setText("Pause");
+}
+
+QString MainWindow::getURL(QString episode)
+{
+    return QString("http://media2.risky.biz/RB447.mp3");
+}
+
+void MainWindow::on_playerSlider_valueChanged(int value)
+{
+    int time = player->duration()*(value/100.0);
+    if(player->state() == QMediaPlayer::PlayingState){
+        player->setPosition(time);
+    }
+}
+
+// Temporary function to populate the episode list until the SSL issue is resolved
+// https://github.com/ForeEyes/PodcastFeed/issues/10
+void MainWindow::populatePodcasts()
+{
+    QStringList episodes;
+    episodes << "First Episode";
+    episodes << "Second Episode";
+    episodes << "Third Episode";
+
+    ui->EpisodeList->addItems(episodes);
 }

@@ -17,6 +17,14 @@
 
 #include <QDir>
 #include <QStandardPaths>
+
+#include <QMediaPlayer>
+
+// Temporary code to populate the episode list until the SSL issue is resolved
+// https://github.com/ForeEyes/PodcastFeed/issues/10
+#include <QStringList>
+#include <QStringListModel>
+
 namespace Ui {
 class MainWindow;
 }
@@ -63,6 +71,10 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
+    void on_playButton_clicked();
+
+    void on_playerSlider_valueChanged(int value);
+
 private:
     Ui::MainWindow *ui;
 
@@ -75,6 +87,16 @@ private:
     QString iconFolder = appDataFolder + "/icons";
 
     QString appDataFile = appDataFolder + "/podcasts.json";
+
+    QMediaPlayer *player = new QMediaPlayer;
+
+    QString getURL(QString episode);
+
+    void playAudio(QString URL);
+
+    // Temporary code to populate the episode list until the SSL issue is resolved
+    // https://github.com/ForeEyes/PodcastFeed/issues/10
+    void populatePodcasts();
 };
 
 #endif // MAINWINDOW_H
