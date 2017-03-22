@@ -39,6 +39,12 @@ private slots:
 
     void on_actionRemove_Podcast_triggered();
 
+    void on_PodcastList_clicked(const QModelIndex &index);
+
+    void on_EpisodeList_clicked(const QModelIndex &index);
+
+    void updateUIPodcastList();
+
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
 
     void getRSSurl(QString itunesLink);
@@ -51,16 +57,24 @@ private slots:
 
     void storeIcon(QString podcastName, QString iconURL);
 
+    void addPodcast_toAppDataFile(QString podcastName, QString rssLink);
+
+    void removePodcast_fromAppDataFile(QString podcastName);
+
+    bool checkPodcastExists(QString podcastName);
+
 private:
     Ui::MainWindow *ui;
 
     QNetworkAccessManager* manager;
 
-    QString AppDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
+    QString appDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
 
-    QString xmlFolder = AppDataFolder + "/xml";
+    QString xmlFolder = appDataFolder + "/xml";
 
-    QString IconFolder = AppDataFolder + "/icons";
+    QString iconFolder = appDataFolder + "/icons";
+
+    QString appDataFile = appDataFolder + "/podcasts.json";
 };
 
 #endif // MAINWINDOW_H

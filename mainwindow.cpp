@@ -11,17 +11,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Check if Appdata folders exit, and create them if not
-    if(!QDir().exists(AppDataFolder)){
-        QDir().mkdir(AppDataFolder);
+    if(!QDir().exists(appDataFolder)){
+        QDir().mkdir(appDataFolder);
     }
 
     if(!QDir().exists(xmlFolder)){
         QDir().mkdir(xmlFolder);
     }
 
-    if(!QDir().exists(IconFolder)){
-        QDir().mkdir(IconFolder);
+    if(!QDir().exists(iconFolder)){
+        QDir().mkdir(iconFolder);
     }
+
+    //Populate the widgets
+    updateUIPodcastList();
+
+    //Settings
+    ui->PodcastList->setIconSize(QSize(20,20));
 
 }
 
@@ -60,12 +66,86 @@ void MainWindow::on_actionUsing_RSS_Link_triggered()
 
 void MainWindow::on_actionRefresh_Feed_triggered()
 {
+    //re-download xml files
 
+    //re-download icons
+
+    //re-populate widgets
+    updateUIPodcastList();
 }
 
 void MainWindow::on_actionRemove_Podcast_triggered()
 {
+    bool ok;
 
+    QStringList podcastList;
+    //use the app data file to populate the podcast list
+    QFile jsonFile(appDataFile);
+    if(jsonFile.open(QFile::ReadOnly)){
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+        QJsonObject jsonObject = document.object();
+        QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
+
+        foreach (const QJsonValue & value, jsonArray) {
+            QJsonObject obj = value.toObject();
+
+            podcastList << obj["podcastName"].toString();
+        }
+
+        jsonFile.close();
+    }
+    //Dialog asking the user what podcast they would like ot remove
+    //Using a dropdown menu populated with podcast list
+    QString podcastName = QInputDialog::getItem(this, "Remove Podcast",
+                                         "Select Podcast to remove",
+                                         podcastList, 0, false, &ok);
+    if (ok && !podcastName.isEmpty()){
+        //Remove podcast from app data file
+        removePodcast_fromAppDataFile(podcastName);
+        //Remove xml file
+        QFile podcastXML(xmlFolder + "/" + podcastName + ".xml");
+        podcastXML.remove();
+        //Remove icon file
+        QFile podcastIcon(iconFolder + "/" + podcastName + ".bmp");
+        podcastIcon.remove();
+        //re-populate widgets
+        updateUIPodcastList();
+    }
+}
+
+void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
+{
+
+}
+
+void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
+{
+
+}
+
+void MainWindow::updateUIPodcastList(){
+    //clear the display widgets
+    ui->PodcastList->clear();
+    ui->EpisodeList->clear();
+    ui->Description->clear();
+
+    //Open the app data file
+    QFile jsonFile(appDataFile);
+    if(jsonFile.open(QFile::ReadOnly)){
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+        QJsonObject jsonObject = document.object();
+        QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
+
+        //go through the podcast list
+        foreach (const QJsonValue & value, jsonArray) {
+            QJsonObject obj = value.toObject();
+            //icon path for current podcast
+            QString iconPath = iconFolder + "/" + obj["podcastName"].toString() + ".bmp";
+            //add the podcast and its icon to the podcast list widget.
+            new QListWidgetItem(QIcon(iconPath),obj["podcastName"].toString(), ui->PodcastList);
+        }
+        jsonFile.close();
+    }
 }
 
 //Custom Dialog for Adding Podcast
@@ -118,6 +198,8 @@ void MainWindow::getRSSurl(QString itunesLink){
         //http request
         manager->get(QNetworkRequest(url));
 
+    } else {
+        ui->statusBar->showMessage("Incorrect Itunes Link!", 3000);
     }
 }
 
@@ -194,8 +276,13 @@ void MainWindow::addPodcast(QString rssLink){
             }
         }
 
-        storeXmlFile(podcastName, rawReply);
-        storeIcon(podcastName, podcastIconURL);
+        if(!podcastName.isEmpty() && !podcastIconURL.isEmpty()){
+            storeXmlFile(podcastName, rawReply);
+            storeIcon(podcastName, podcastIconURL);
+            addPodcast_toAppDataFile(podcastName, rssLink);
+            //re-populate widgets
+            updateUIPodcastList();
+        }
 
     } else {
         //reply error or reply is not xml
@@ -235,7 +322,7 @@ void MainWindow::storeIcon(QString podcastName, QString iconURL){
 
     if (reply->error() == QNetworkReply::NoError) {
         //Icon File Path
-        QString IconPath = IconFolder + "/" + podcastName + ".bmp";
+        QString IconPath = iconFolder + "/" + podcastName + ".bmp";
         //using QImage to convert from unknown format to bmp
         QImage icon;
         //load reply data into icon
@@ -246,12 +333,121 @@ void MainWindow::storeIcon(QString podcastName, QString iconURL){
         } else {
             icon.save(IconPath);
         }
-
         reply->deleteLater();
     } else {
         //Failed to get icon
         statusBar()->showMessage("Failed to store podcast icon", 3000);
         reply->deleteLater();
     }
+}
 
+void MainWindow::addPodcast_toAppDataFile(QString podcastName, QString rssLink){
+    //check if the podcast already exists
+    if(!checkPodcastExists(podcastName)){
+
+        QFile jsonFile(appDataFile);
+        jsonFile.open(QFile::ReadWrite);
+
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+        //If this is a new file, i.e first time adding a podcast, create the json object and store in file
+        if(jsonFile.pos() == 0){
+            QJsonObject jsonObject;
+            QJsonObject arrayObject{
+                {"podcastName", podcastName},
+                {"rssLink", rssLink}
+            };
+            QJsonArray jsonArray;
+            jsonArray.append(arrayObject);
+            jsonObject.insert("Podcasts", jsonArray);
+            document.setObject(jsonObject);
+            jsonFile.write(document.toJson());
+            jsonFile.close();
+        }else{
+        //If this is not a new file, edit the json object and store in file
+            QJsonObject jsonObject = document.object();
+            QJsonObject arrayObject{
+                {"podcastName", podcastName},
+                {"rssLink", rssLink}
+            };
+            QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
+            jsonArray.append(arrayObject);
+            jsonObject.insert("Podcasts", jsonArray);
+            document.setObject(jsonObject);
+            jsonFile.close();
+            //reopen file inorder to clear existing data and place the updated podcasts object
+            jsonFile.open(QFile::WriteOnly | QFile::Truncate);
+            jsonFile.write(document.toJson());
+            jsonFile.close();
+
+        }
+
+        ui->statusBar->showMessage("Podcast Added", 3000);
+    }else{
+        statusBar()->showMessage("Podcast Already Exists!", 3000);
+    }
+}
+
+void MainWindow::removePodcast_fromAppDataFile(QString podcastName){
+    if(checkPodcastExists(podcastName)){
+        //keep track of the array element in foreach loop
+        int podcastNumber = 0;
+
+        QFile jsonFile(appDataFile);
+        jsonFile.open(QFile::ReadWrite);
+
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+
+        QJsonObject jsonObject = document.object();
+
+        QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
+        foreach (const QJsonValue & value, jsonArray) {
+            QJsonObject obj = value.toObject();
+            if(obj["podcastName"].toString() == podcastName){
+                //if the podcast is found, remove it from array using the podcastNumber
+                jsonArray.removeAt(podcastNumber);
+                break;
+            }else{
+                //else update number
+                podcastNumber++;
+            }
+        }
+        jsonObject.insert("Podcasts", jsonArray);
+        document.setObject(jsonObject);
+        jsonFile.close();
+        //reopen file inorder to clear existing data and place the updated podcasts object
+        jsonFile.open(QFile::WriteOnly | QFile::Truncate);
+        jsonFile.write(document.toJson());
+        jsonFile.close();
+
+        ui->statusBar->showMessage("Podcast Removed", 3000);
+    }else{
+        ui->statusBar->showMessage("Podcast does not exist!", 3000);
+    }
+}
+
+bool MainWindow::checkPodcastExists(QString podcastName){
+    //Open json file as read only
+    QFile jsonFile(appDataFile);
+    //if file does not exit return false
+    if(!jsonFile.open(QFile::ReadOnly)){
+        return false;
+    }else{
+        //convert all object in the app data file into an array
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+        QJsonObject jsonObject = document.object();
+        QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
+
+        //go through array and look for the podcast
+        foreach (const QJsonValue & value, jsonArray) {
+            QJsonObject obj = value.toObject();
+            if(obj["podcastName"].toString() == podcastName){
+                //if the podcast is found return true
+                jsonFile.close();
+                return true;
+            }
+        }
+    }
+    //If the podcast is not found return false
+    jsonFile.close();
+    return false;
 }
