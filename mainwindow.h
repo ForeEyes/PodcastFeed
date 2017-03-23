@@ -92,6 +92,8 @@ private:
 
     QString getURL(QString episode);
 
+    QUrl episodeFile();
+
     void playAudio(QString URL);
 
     // Temporary code to populate the episode list until the SSL issue is resolved

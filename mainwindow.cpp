@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Populate the widgets
     updateUIPodcastList();
-    populatePodcasts();
 
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
@@ -490,15 +489,10 @@ void MainWindow::playAudio(QString URL)
  * Author: Uzair Shamim
  */
 
-    player->setMedia(QUrl(URL));
+    player->setMedia(episodeFile());
     player->setVolume(50);
     player->play();
     ui->playButton->setText("Pause");
-}
-
-QString MainWindow::getURL(QString episode)
-{
-    return QString("http://media2.risky.biz/RB447.mp3");
 }
 
 void MainWindow::on_playerSlider_valueChanged(int value)
@@ -507,16 +501,4 @@ void MainWindow::on_playerSlider_valueChanged(int value)
     if(player->state() == QMediaPlayer::PlayingState){
         player->setPosition(time);
     }
-}
-
-// Temporary function to populate the episode list until the SSL issue is resolved
-// https://github.com/ForeEyes/PodcastFeed/issues/10
-void MainWindow::populatePodcasts()
-{
-    QStringList episodes;
-    episodes << "First Episode";
-    episodes << "Second Episode";
-    episodes << "Third Episode";
-
-    ui->EpisodeList->addItems(episodes);
 }
