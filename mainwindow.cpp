@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
+    ui->Description->setOpenExternalLinks(true);
 
 }
 
@@ -115,12 +116,89 @@ void MainWindow::on_actionRemove_Podcast_triggered()
 
 void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 {
+    QString podcastName = ui->PodcastList->item(index.row())->text();
+    QStringList Episodes;
 
+    QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
+
+    QFile xmlFile(podcastFilePath);
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
+        ui->statusBar->showMessage("Cannot load xml file...", 3000);
+    }
+
+    QXmlStreamReader xml(&xmlFile);
+
+    bool firstSkipped = false;
+
+    while(!xml.atEnd() && !xml.hasError()) {
+        // Read next element
+        QXmlStreamReader::TokenType token = xml.readNext();
+        //If token is just StartDocument - go to next
+        if(token == QXmlStreamReader::StartDocument) {
+                continue;
+        }
+        //If token is StartElement - read it
+        if(token == QXmlStreamReader::StartElement) {
+
+            if(xml.name() == "title" && xml.prefix().isEmpty() && firstSkipped) {
+                Episodes << xml.readElementText();
+            }
+
+            if(xml.name() == "title" && !firstSkipped){
+                firstSkipped = true;
+            }
+        }
+    }
+    xmlFile.close();
+
+    ui->EpisodeList->clear();
+    std::reverse(Episodes.begin(), Episodes.end());
+    ui->EpisodeList->addItems(Episodes);
 }
 
 void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
 {
+    QString podcastName = ui->PodcastList->currentItem()->text();
+    QString episodeName = ui->EpisodeList->item(index.row())->text();
+    QString episodeDescription;
 
+    QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
+
+    QFile xmlFile(podcastFilePath);
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
+        ui->statusBar->showMessage("Cannot load xml file...", 3000);
+    }
+
+    QXmlStreamReader xml(&xmlFile);
+
+    bool descriptionReached = false;
+
+    while(!xml.atEnd() && !xml.hasError()) {
+        // Read next element
+        QXmlStreamReader::TokenType token = xml.readNext();
+        //If token is just StartDocument - go to next
+        if(token == QXmlStreamReader::StartDocument) {
+                continue;
+        }
+        //If token is StartElement - read it
+        if(token == QXmlStreamReader::StartElement) {
+
+            if(xml.name() == "title" && xml.prefix().isEmpty() && xml.readElementText() == episodeName){
+                descriptionReached = true;
+            }
+
+            if(xml.name() == "description" && descriptionReached) {
+                episodeDescription = xml.readElementText();
+                break;
+            }
+        }
+    }
+    xmlFile.close();
+
+    episodeDescription.insert(0, "<b>Description:</b>");
+
+    ui->Description->clear();
+    ui->Description->setHtml(episodeDescription);
 }
 
 void MainWindow::updateUIPodcastList(){
@@ -450,4 +528,63 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     //If the podcast is not found return false
     jsonFile.close();
     return false;
+}
+
+void MainWindow::on_playPauseAudio_clicked()
+{
+    player = new QMediaPlayer(this);
+//    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+//    QUrl audioFile = episodeFile();
+//    qDebug() << audioFile;
+    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
+//    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
+    player->setVolume(50);
+    player->play();
+}
+
+void MainWindow::on_stopAudio_clicked()
+{
+//    player = new QMediaPlayer;
+    player->stop();
+}
+
+QUrl MainWindow::episodeFile(){
+    QString podcastName = ui->PodcastList->currentItem()->text();
+    QString episodeName = ui->EpisodeList->currentItem()->text();
+    QUrl audioFile;
+
+    QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
+
+    QFile xmlFile(podcastFilePath);
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
+        ui->statusBar->showMessage("Cannot load xml file...", 3000);
+    }
+
+    QXmlStreamReader xml(&xmlFile);
+
+    bool episodeReached = false;
+
+    while(!xml.atEnd() && !xml.hasError()) {
+        // Read next element
+        QXmlStreamReader::TokenType token = xml.readNext();
+        //If token is just StartDocument - go to next
+        if(token == QXmlStreamReader::StartDocument) {
+                continue;
+        }
+        //If token is StartElement - read it
+        if(token == QXmlStreamReader::StartElement) {
+
+            if(xml.name() == "title" && xml.prefix().isEmpty() && xml.readElementText() == episodeName){
+                episodeReached = true;
+            }
+
+            if(xml.name() == "enclosure" && episodeReached) {
+                audioFile = xml.attributes().value("url").toString();
+                break;
+            }
+        }
+    }
+    xmlFile.close();
+
+    return audioFile;
 }
