@@ -29,7 +29,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
     ui->Description->setOpenExternalLinks(true);
-
 }
 
 MainWindow::~MainWindow()
@@ -530,7 +529,6 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-<<<<<<< HEAD
 void MainWindow::on_playButton_clicked()
 {
 /* Purpose: Invoke the QMediaPlayer object to play or pause an audio file as chosen by a user.
@@ -543,9 +541,7 @@ void MainWindow::on_playButton_clicked()
 
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        QString selection = list[0].data().toString();
-        QString URL = getURL(selection);
-        playAudio(URL);
+        playAudio();
 
     // Player is paused but the user now clicked the play button to start audio playback
     }else if(player->state() == QMediaPlayer::PausedState){
@@ -559,7 +555,7 @@ void MainWindow::on_playButton_clicked()
     }
 }
 
-void MainWindow::playAudio(QString URL)
+void MainWindow::playAudio()
 {
 /* Purpose: Initialize the media player (QMediaPlayer object) with a QString URL provided by the user.
  *          After execution of this function the user should be able to hear audio of the chosen file the linked.
@@ -580,26 +576,10 @@ void MainWindow::on_playerSlider_valueChanged(int value)
     if(player->state() == QMediaPlayer::PlayingState){
         player->setPosition(time);
     }
-=======
-void MainWindow::on_playPauseAudio_clicked()
-{
-    player = new QMediaPlayer(this);
-//    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
-//    QUrl audioFile = episodeFile();
-//    qDebug() << audioFile;
-    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
-//    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
-    player->setVolume(50);
-    player->play();
 }
 
-void MainWindow::on_stopAudio_clicked()
+QUrl MainWindow::episodeFile()
 {
-//    player = new QMediaPlayer;
-    player->stop();
-}
-
-QUrl MainWindow::episodeFile(){
     QString podcastName = ui->PodcastList->currentItem()->text();
     QString episodeName = ui->EpisodeList->currentItem()->text();
     QUrl audioFile;
@@ -638,5 +618,10 @@ QUrl MainWindow::episodeFile(){
     xmlFile.close();
 
     return audioFile;
->>>>>>> master
+}
+
+void MainWindow::on_stopAudio_clicked()
+{
+    player->stop();
+    ui->playButton->setText("Play");
 }

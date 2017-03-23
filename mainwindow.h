@@ -19,15 +19,7 @@
 #include <QStandardPaths>
 
 #include <QMediaPlayer>
-<<<<<<< HEAD
 
-// Temporary code to populate the episode list until the SSL issue is resolved
-// https://github.com/ForeEyes/PodcastFeed/issues/10
-#include <QStringList>
-#include <QStringListModel>
-
-=======
->>>>>>> master
 namespace Ui {
 class MainWindow;
 }
@@ -74,24 +66,16 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
-<<<<<<< HEAD
     void on_playButton_clicked();
 
     void on_playerSlider_valueChanged(int value);
-=======
-    void on_playPauseAudio_clicked();
 
     void on_stopAudio_clicked();
-
-    QUrl episodeFile();
->>>>>>> master
 
 private:
     Ui::MainWindow *ui;
 
     QNetworkAccessManager *manager;
-
-    QMediaPlayer *player;
 
     QString appDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
 
@@ -103,15 +87,9 @@ private:
 
     QMediaPlayer *player = new QMediaPlayer;
 
-    QString getURL(QString episode);
-
     QUrl episodeFile();
 
-    void playAudio(QString URL);
-
-    // Temporary code to populate the episode list until the SSL issue is resolved
-    // https://github.com/ForeEyes/PodcastFeed/issues/10
-    void populatePodcasts();
+    void playAudio();
 };
 
 #endif // MAINWINDOW_H
