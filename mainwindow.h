@@ -19,6 +19,7 @@
 #include <QStandardPaths>
 
 #include <QMediaPlayer>
+
 namespace Ui {
 class MainWindow;
 }
@@ -65,18 +66,16 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
-    void on_playPauseAudio_clicked();
+    void on_playButton_clicked();
+
+    void on_playerSlider_valueChanged(int value);
 
     void on_stopAudio_clicked();
-
-    QUrl episodeFile();
 
 private:
     Ui::MainWindow *ui;
 
     QNetworkAccessManager *manager;
-
-    QMediaPlayer *player;
 
     QString appDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
 
@@ -85,6 +84,12 @@ private:
     QString iconFolder = appDataFolder + "/icons";
 
     QString appDataFile = appDataFolder + "/podcasts.json";
+
+    QMediaPlayer *player = new QMediaPlayer;
+
+    QUrl episodeFile();
+
+    void playAudio();
 };
 
 #endif // MAINWINDOW_H
