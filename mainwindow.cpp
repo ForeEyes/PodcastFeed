@@ -625,3 +625,19 @@ void MainWindow::on_stopAudio_clicked()
     player->stop();
     ui->playButton->setText("Play");
 }
+
+void MainWindow::on_skipForward_clicked()
+{
+    // get current play time (base on slider %?)
+    // if current time + X <= duration - 1
+        // skip forward X seconds
+    // else do nothing
+}
+
+void MainWindow::on_skipBackward_clicked()
+{
+    // get current play time (base on slider %?)
+    // if current time - X >= 1
+        // skip backwards X seconds
+    // else do nothing
+}

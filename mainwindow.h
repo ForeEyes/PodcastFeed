@@ -72,6 +72,10 @@ private slots:
 
     void on_stopAudio_clicked();
 
+    void on_skipForward_clicked();
+
+    void on_skipBackward_clicked();
+
 private:
     Ui::MainWindow *ui;
 
