@@ -20,6 +20,9 @@
 
 #include <QMediaPlayer>
 
+#include <QCloseEvent>
+#include <QSystemTrayIcon>
+
 namespace Ui {
 class MainWindow;
 }
@@ -66,7 +69,7 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
-//    void on_playerSlider_valueChanged(int value);
+    void closeEvent (QCloseEvent *event);
 
     void setSliderRange(qint64 duration);
 
@@ -83,6 +86,8 @@ private slots:
     void on_playPodcast_clicked();
 
     void on_playerSlider_sliderReleased();
+
+    void displayWindow();
 
 private:
     Ui::MainWindow *ui;

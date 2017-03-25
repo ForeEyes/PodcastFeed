@@ -33,6 +33,31 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->volumeSlider->setValue(10);
     player->setVolume(ui->volumeSlider->value());
     connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
+
+    // Only show minimize button
+    //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
+
+    // Tray
+    QSystemTrayIcon *tray = new QSystemTrayIcon();
+    connect(tray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(displayWindow()));
+    tray->setIcon(QIcon(":/trayIcon.png"));
+    tray->setToolTip("PodcastFeed");
+    tray->show();
+}
+
+void MainWindow::closeEvent (QCloseEvent *event)
+{
+    if(this->isMinimized()){
+        event->accept();
+    }else{
+        event->ignore();
+        this->hide();
+    }
+}
+
+void MainWindow::displayWindow()
+{
+    this->show();
 }
 
 MainWindow::~MainWindow()
@@ -564,14 +589,6 @@ void MainWindow::playAudio()
     player->setMedia(episodeFile());
     player->play();
 }
-
-//void MainWindow::on_playerSlider_valueChanged(int value)
-//{
-//    int time = player->duration()*(value/100.0);
-//    if(player->state() == QMediaPlayer::PlayingState){
-//        player->setPosition(time);
-//    }
-//}
 
 void MainWindow::on_playPodcast_clicked()
 {
