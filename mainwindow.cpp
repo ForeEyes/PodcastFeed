@@ -119,6 +119,8 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     QStringList Episodes;
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
+    QStringList xmlStringList;
+    QString podcastDescText;
 
     QFile xmlFile(podcastFilePath);
     if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
@@ -126,6 +128,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     }
 
     QXmlStreamReader xml(&xmlFile);
+
 
     bool firstSkipped = false;
 
@@ -147,12 +150,58 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
                 firstSkipped = true;
             }
         }
-    }
+     }
+
+    xml.clear();
     xmlFile.close();
+
+    if (!xmlFile.open(QFile::ReadOnly | QFile::Text)) {
+        ui->statusBar->showMessage("Cannot load xml file...", 3000);
+    }
+
+    QXmlStreamReader xml2(&xmlFile);
+
+
+
+    //This filestream has been parsed through already.
+    //Continue reading the filestream to loop over to the point where it is a new fileread again
+    //while(!xml.isStartElement()){
+    //    xml.;
+    //}
+    podcastDescText.insert(0, "<b>Podcast Description:</b>");
+
+    while(!xml2.atEnd() && !xml2.hasError()) {
+            // Read next element
+            QXmlStreamReader::TokenType token = xml2.readNext();
+            //If token is just StartDocument - go to next
+            if(token == QXmlStreamReader::StartDocument) {
+                    continue;
+            }
+            if(xml2.name() == "rss"){
+                xml2.readNext();
+                }
+            if(xml2.name() == "channel"){
+                xml2.readNext();
+            }
+            podcastDescText += "<h4>";
+            podcastDescText += xml2.name();
+            podcastDescText += "</h4>";
+            podcastDescText += "\n";
+            podcastDescText += xml2.readElementText();
+            podcastDescText += "\n";
+     }
+
+    xml2.clear();
+    xmlFile.close();
+
+
+
 
     ui->EpisodeList->clear();
     std::reverse(Episodes.begin(), Episodes.end());
     ui->EpisodeList->addItems(Episodes);
+    ui->Description->clear();
+    ui->Description->setHtml(podcastDescText);
 }
 
 void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
