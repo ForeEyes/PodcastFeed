@@ -23,12 +23,24 @@
          <widget class="QSlider" name="playerSlider">
           <property name="minimumSize">
            <size>
-            <width>0</width>
-            <height>15</height>
+            <width>1</width>
+            <height>18</height>
            </size>
+          </property>
+          <property name="autoFillBackground">
+           <bool>false</bool>
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="invertedAppearance">
+           <bool>false</bool>
+          </property>
+          <property name="invertedControls">
+           <bool>false</bool>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBelow</enum>
           </property>
          </widget>
         </item>
