@@ -20,6 +20,8 @@
 
 #include <QMediaPlayer>
 
+#include <QCloseEvent>
+
 namespace Ui {
 class MainWindow;
 }
@@ -66,7 +68,7 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
-//    void on_playerSlider_valueChanged(int value);
+    void closeEvent (QCloseEvent *event);
 
     void setSliderRange(qint64 duration);
 

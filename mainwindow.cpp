@@ -33,6 +33,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->volumeSlider->setValue(10);
     player->setVolume(ui->volumeSlider->value());
     connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
+
+    // Only show minimize button
+    //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
+}
+
+void MainWindow::closeEvent (QCloseEvent *event)
+{
+    event->ignore();
+    qDebug() << "asd";
 }
 
 MainWindow::~MainWindow()
@@ -564,14 +573,6 @@ void MainWindow::playAudio()
     player->setMedia(episodeFile());
     player->play();
 }
-
-//void MainWindow::on_playerSlider_valueChanged(int value)
-//{
-//    int time = player->duration()*(value/100.0);
-//    if(player->state() == QMediaPlayer::PlayingState){
-//        player->setPosition(time);
-//    }
-//}
 
 void MainWindow::on_playPodcast_clicked()
 {
