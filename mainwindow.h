@@ -66,19 +66,23 @@ private slots:
 
     bool checkPodcastExists(QString podcastName);
 
-    void on_playButton_clicked();
-
 //    void on_playerSlider_valueChanged(int value);
 
     void setSliderRange(qint64 duration);
 
     void on_stopAudio_clicked();
 
-    void on_skipForward_clicked();
-
-    void on_skipBackward_clicked();
-
     void positionChanged(qint64 timeElapsed);
+
+    void on_pauseResumeAudio_clicked();
+
+    void on_skip_backward_clicked();
+
+    void on_skip_forward_clicked();
+
+    void on_playPodcast_clicked();
+
+    void on_playerSlider_sliderReleased();
 
 private:
     Ui::MainWindow *ui;
