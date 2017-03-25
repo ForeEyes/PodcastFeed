@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
     ui->Description->setOpenExternalLinks(true);
+    //Connect Volume Slider to player volume
+    ui->volumeSlider->setValue(10);
+    player->setVolume(ui->volumeSlider->value());
+    connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
 }
 
 MainWindow::~MainWindow()
@@ -529,32 +533,6 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-void MainWindow::on_playButton_clicked()
-{
-/* Purpose: Invoke the QMediaPlayer object to play or pause an audio file as chosen by a user.
- *
- * Author: Uzair Shamim
- */
-
-    // Get the values selected by the user, this should work regardless of if the widget is model or item based
-    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
-
-    // User selected an episode AND the player is not currently playing any audio
-    if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        playAudio();
-
-    // Player is paused but the user now clicked the play button to start audio playback
-    }else if(player->state() == QMediaPlayer::PausedState){
-        player->play();
-        ui->playButton->setText("Pause");
-
-    // Player is playing audio but user now clicked the pause button to pause the audio
-    }else if(player->state() == QMediaPlayer::PlayingState){
-        player->pause();
-        ui->playButton->setText("Play");
-    }
-}
-
 void MainWindow::playAudio()
 {
 /* Purpose: Initialize the media player (QMediaPlayer object) with a QString URL provided by the user.
@@ -563,12 +541,11 @@ void MainWindow::playAudio()
  *
  * Author: Uzair Shamim
  */
+    //Vamsi: Added connects to get episode duration and sync player slider to audio position
     connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
     connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
     player->setMedia(episodeFile());
-    player->setVolume(50);
     player->play();
-    ui->playButton->setText("Pause");
 }
 
 //void MainWindow::on_playerSlider_valueChanged(int value)
@@ -579,16 +556,70 @@ void MainWindow::playAudio()
 //    }
 //}
 
+void MainWindow::on_playPodcast_clicked()
+{
+    // Get the values selected by the user, this should work regardless of if the widget is model or item based
+    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
+
+    // User selected an episode AND the player is not currently playing any audio
+    if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
+        playAudio();
+    }else if (list.length() > 0){
+        player->stop();
+        playAudio();
+    }
+
+}
+
+void MainWindow::on_stopAudio_clicked()
+{
+    player->stop();
+}
+
+void MainWindow::on_pauseResumeAudio_clicked()
+{
+    //Vamsi: If audio is playing pause and change text to resume
+    if(player->state() == QMediaPlayer::PlayingState){
+        player->pause();
+        ui->pauseResumeAudio->setText("Resume");
+    //Vamsi: If audio is pause then play audio and change text to pause
+    }else if(player->state() == QMediaPlayer::PausedState){
+        player->play();
+        ui->pauseResumeAudio->setText("Pause");
+    }
+}
+
+void MainWindow::on_skip_backward_clicked()
+{
+    //Vamsi: Skip backward by 15 seconds
+    player->setPosition(player->position() - (15*1000));
+}
+
+void MainWindow::on_skip_forward_clicked()
+{
+    //Vamsi: Skip ahead by 15 seconds
+    player->setPosition(player->position() + (15*1000));
+}
 
 //Author:Vamsidhar Allampati
 //Set the slider range after buffer is filled
 void MainWindow::setSliderRange(qint64 duration){
+    QTime episodeDuration(0,0,0,0);
     ui->playerSlider->setRange(0, duration);
+    ui->durationLabel->setText("/ " + episodeDuration.addMSecs(duration).toString());
 }
 //Set the postion as the audio plays
 void MainWindow::positionChanged(qint64 timeElapsed){
+    QTime elapsedTime(0,0,0,0);
     ui->playerSlider->setValue(timeElapsed);
+    ui->elapsedLabel->setText(elapsedTime.addMSecs(timeElapsed).toString());
 }
+//after the user drags the slider, audio position is updated
+void MainWindow::on_playerSlider_sliderReleased()
+{
+    player->setPosition(ui->playerSlider->value());
+}
+
 //get the file url by parsing xml file.
 QUrl MainWindow::episodeFile()
 {
@@ -632,8 +663,3 @@ QUrl MainWindow::episodeFile()
     return audioFile;
 }
 //end Author:Vamsidhar Allampati
-void MainWindow::on_stopAudio_clicked()
-{
-    player->stop();
-    ui->playButton->setText("Play");
-}
