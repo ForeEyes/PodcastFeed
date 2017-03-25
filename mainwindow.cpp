@@ -120,7 +120,10 @@ void MainWindow::on_actionRemove_Podcast_triggered()
 void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 {
     QString podcastName = ui->PodcastList->item(index.row())->text();
+    QString podcastDescription;
     QStringList Episodes;
+
+
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
@@ -132,6 +135,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     QXmlStreamReader xml(&xmlFile);
 
     bool firstSkipped = false;
+    bool DescReached = false;
 
     while(!xml.atEnd() && !xml.hasError()) {
         // Read next element
@@ -140,23 +144,37 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
         if(token == QXmlStreamReader::StartDocument) {
                 continue;
         }
-        //If token is StartElement - read it
+        //Description for Podcast
+        if(xml.name() == "rss"){
+            xml.readNext();
+            }
+        if(xml.name() == "channel"){
+            xml.readNext();
+        }
+        if(xml.name() == "description" && !DescReached){
+                podcastDescription += "Podcast Description: \n---------------------------\n";
+                podcastDescription += xml.readElementText();
+                //Check boolean if podcast description has already been taken
+                DescReached = true;
+        }
         if(token == QXmlStreamReader::StartElement) {
-
             if(xml.name() == "title" && xml.prefix().isEmpty() && firstSkipped) {
                 Episodes << xml.readElementText();
             }
-
             if(xml.name() == "title" && !firstSkipped){
                 firstSkipped = true;
             }
         }
-    }
+     }
+
+    xml.clear();
     xmlFile.close();
 
     ui->EpisodeList->clear();
     std::reverse(Episodes.begin(), Episodes.end());
     ui->EpisodeList->addItems(Episodes);
+    ui->Description->clear();
+    ui->Description->setText(podcastDescription);
 }
 
 void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
@@ -185,7 +203,6 @@ void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
         }
         //If token is StartElement - read it
         if(token == QXmlStreamReader::StartElement) {
-
             if(xml.name() == "title" && xml.prefix().isEmpty() && xml.readElementText() == episodeName){
                 descriptionReached = true;
             }
