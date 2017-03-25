@@ -617,7 +617,9 @@ void MainWindow::positionChanged(qint64 timeElapsed){
 //after the user drags the slider, audio position is updated
 void MainWindow::on_playerSlider_sliderReleased()
 {
-    player->setPosition(ui->playerSlider->value());
+    if(player->state() == QMediaPlayer::PlayingState){
+        player->setPosition(ui->playerSlider->value());
+    }
 }
 
 //get the file url by parsing xml file.
