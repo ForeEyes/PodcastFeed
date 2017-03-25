@@ -150,7 +150,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
             xml.readNext();
         }
         if(xml.name() == "description" && !DescReached){
-                podcastDescription += xml.name();
+                podcastDescription += "Podcast Description: \n---------------------------\n";
                 podcastDescription += xml.readElementText();
                 //Check boolean if podcast description has already been taken
                 DescReached = true;
