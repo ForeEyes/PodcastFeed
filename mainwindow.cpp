@@ -29,7 +29,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //Settings
     ui->PodcastList->setIconSize(QSize(20,20));
     ui->Description->setOpenExternalLinks(true);
-
 }
 
 MainWindow::~MainWindow()
@@ -44,7 +43,6 @@ void MainWindow::on_actionUsing_Itunes_Link_triggered()
     //call the Podcast dialog function and pass the label, and window title
     QString itunesLink = addPodcast_dlg("Itunes Link:", "Add Podcast using Itunes Link", ok);
     //Check if user clicked ok and it the string is empty
-
     if(ok && !itunesLink.isEmpty()){
         //Pass Itunes Link to getRSSurl
         //function will then get the rss url and call addPodcast Function
@@ -548,25 +546,69 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-void MainWindow::on_playPauseAudio_clicked()
+void MainWindow::on_playButton_clicked()
 {
-    player = new QMediaPlayer(this);
-//    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
-//    QUrl audioFile = episodeFile();
-//    qDebug() << audioFile;
-    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
-//    player->setMedia(QUrl::fromLocalFile(appDataFolder + "/atp213.mp3"));
+/* Purpose: Invoke the QMediaPlayer object to play or pause an audio file as chosen by a user.
+ *
+ * Author: Uzair Shamim
+ */
+
+    // Get the values selected by the user, this should work regardless of if the widget is model or item based
+    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
+
+    // User selected an episode AND the player is not currently playing any audio
+    if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
+        playAudio();
+
+    // Player is paused but the user now clicked the play button to start audio playback
+    }else if(player->state() == QMediaPlayer::PausedState){
+        player->play();
+        ui->playButton->setText("Pause");
+
+    // Player is playing audio but user now clicked the pause button to pause the audio
+    }else if(player->state() == QMediaPlayer::PlayingState){
+        player->pause();
+        ui->playButton->setText("Play");
+    }
+}
+
+void MainWindow::playAudio()
+{
+/* Purpose: Initialize the media player (QMediaPlayer object) with a QString URL provided by the user.
+ *          After execution of this function the user should be able to hear audio of the chosen file the linked.
+ *          This function should be able to play both local and non-local files as it uses a QUrl and the QMediaPlayer::setMedia() method to parse the path.
+ *
+ * Author: Uzair Shamim
+ */
+    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+    connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
+    player->setMedia(episodeFile());
     player->setVolume(50);
     player->play();
+    ui->playButton->setText("Pause");
 }
 
-void MainWindow::on_stopAudio_clicked()
+//void MainWindow::on_playerSlider_valueChanged(int value)
+//{
+//    int time = player->duration()*(value/100.0);
+//    if(player->state() == QMediaPlayer::PlayingState){
+//        player->setPosition(time);
+//    }
+//}
+
+
+//Author:Vamsidhar Allampati
+//Set the slider range after buffer is filled
+void MainWindow::setSliderRange(qint64 duration){
+    ui->playerSlider->setRange(0, duration);
+}
+//Set the postion as the audio plays
+void MainWindow::positionChanged(qint64 timeElapsed){
+    ui->playerSlider->setValue(timeElapsed);
+}
+//get the file url by parsing xml file.
+QUrl MainWindow::episodeFile()
 {
-//    player = new QMediaPlayer;
-    player->stop();
-}
-
-QUrl MainWindow::episodeFile(){
     QString podcastName = ui->PodcastList->currentItem()->text();
     QString episodeName = ui->EpisodeList->currentItem()->text();
     QUrl audioFile;
@@ -605,4 +647,10 @@ QUrl MainWindow::episodeFile(){
     xmlFile.close();
 
     return audioFile;
+}
+//end Author:Vamsidhar Allampati
+void MainWindow::on_stopAudio_clicked()
+{
+    player->stop();
+    ui->playButton->setText("Play");
 }
