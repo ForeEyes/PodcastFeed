@@ -21,6 +21,7 @@
 #include <QMediaPlayer>
 
 #include <QCloseEvent>
+#include <QSystemTrayIcon>
 
 namespace Ui {
 class MainWindow;
@@ -85,6 +86,8 @@ private slots:
     void on_playPodcast_clicked();
 
     void on_playerSlider_sliderReleased();
+
+    void displayWindow();
 
 private:
     Ui::MainWindow *ui;

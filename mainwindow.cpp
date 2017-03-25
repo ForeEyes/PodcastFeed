@@ -36,12 +36,28 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Only show minimize button
     //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
+
+    // Tray
+    QSystemTrayIcon *tray = new QSystemTrayIcon();
+    connect(tray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(displayWindow()));
+    tray->setIcon(QIcon(":/trayIcon.png"));
+    tray->setToolTip("PodcastFeed");
+    tray->show();
 }
 
 void MainWindow::closeEvent (QCloseEvent *event)
 {
-    event->ignore();
-    qDebug() << "asd";
+    if(this->isMinimized()){
+        event->accept();
+    }else{
+        event->ignore();
+        this->hide();
+    }
+}
+
+void MainWindow::displayWindow()
+{
+    this->show();
 }
 
 MainWindow::~MainWindow()
