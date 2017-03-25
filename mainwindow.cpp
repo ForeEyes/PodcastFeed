@@ -563,21 +563,33 @@ void MainWindow::playAudio()
  *
  * Author: Uzair Shamim
  */
-
+    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+    connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
     player->setMedia(episodeFile());
     player->setVolume(50);
     player->play();
     ui->playButton->setText("Pause");
 }
 
-void MainWindow::on_playerSlider_valueChanged(int value)
-{
-    int time = player->duration()*(value/100.0);
-    if(player->state() == QMediaPlayer::PlayingState){
-        player->setPosition(time);
-    }
-}
+//void MainWindow::on_playerSlider_valueChanged(int value)
+//{
+//    int time = player->duration()*(value/100.0);
+//    if(player->state() == QMediaPlayer::PlayingState){
+//        player->setPosition(time);
+//    }
+//}
 
+
+//Author:Vamsidhar Allampati
+//Set the slider range after buffer is filled
+void MainWindow::setSliderRange(qint64 duration){
+    ui->playerSlider->setRange(0, duration);
+}
+//Set the postion as the audio plays
+void MainWindow::positionChanged(qint64 timeElapsed){
+    ui->playerSlider->setValue(timeElapsed);
+}
+//get the file url by parsing xml file.
 QUrl MainWindow::episodeFile()
 {
     QString podcastName = ui->PodcastList->currentItem()->text();
@@ -619,7 +631,7 @@ QUrl MainWindow::episodeFile()
 
     return audioFile;
 }
-
+//end Author:Vamsidhar Allampati
 void MainWindow::on_stopAudio_clicked()
 {
     player->stop();

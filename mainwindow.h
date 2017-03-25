@@ -68,13 +68,17 @@ private slots:
 
     void on_playButton_clicked();
 
-    void on_playerSlider_valueChanged(int value);
+//    void on_playerSlider_valueChanged(int value);
+
+    void setSliderRange(qint64 duration);
 
     void on_stopAudio_clicked();
 
     void on_skipForward_clicked();
 
     void on_skipBackward_clicked();
+
+    void positionChanged(qint64 timeElapsed);
 
 private:
     Ui::MainWindow *ui;
