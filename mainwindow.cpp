@@ -37,12 +37,21 @@ MainWindow::MainWindow(QWidget *parent) :
     // Only show minimize button
     //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
-    // Tray
+    // Tray icon menu initialization
+    QAction *closeAction = new QAction("&Close", this);
+    QMenu *menu = new QMenu(this);
+    menu->addAction(closeAction);
+
+    // Tray icon initialization
     QSystemTrayIcon *tray = new QSystemTrayIcon();
     connect(tray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(displayWindow()));
     tray->setIcon(QIcon(":/trayIcon.png"));
     tray->setToolTip("PodcastFeed");
+    tray->setContextMenu(menu);
     tray->show();
+
+    // Tray Icon Action Connects
+    connect(closeAction, SIGNAL(triggered()), this, SLOT(closeWindow()));
 
 
     //Set Media Icons
@@ -52,31 +61,39 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->skip_forward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     ui->skip_backward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
 
-    //Ser Media Connects
+    //Set Media Connects
     connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));
     connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
     connect(ui->playerSlider, SIGNAL(valueChanged(int)), this, SLOT(setPosition(int)));
 
 }
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
 void MainWindow::closeEvent (QCloseEvent *event)
 {
-    if(this->isMinimized()){
+    if(this->isMinimized() || canClose == true){
         event->accept();
     }else{
         event->ignore();
+        canClose = true;
         this->hide();
     }
 }
 
 void MainWindow::displayWindow()
 {
+    canClose = false;
     this->show();
 }
 
-MainWindow::~MainWindow()
+void MainWindow::closeWindow()
 {
-    delete ui;
+    canClose = true;
+    this->close();
 }
 
 void MainWindow::on_actionUsing_Itunes_Link_triggered()
