@@ -589,20 +589,6 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-void MainWindow::playAudio()
-{
-/* Purpose: Initialize the media player (QMediaPlayer object) with a QString URL provided by the user.
- *          After execution of this function the user should be able to hear audio of the chosen file the linked.
- *          This function should be able to play both local and non-local files as it uses a QUrl and the QMediaPlayer::setMedia() method to parse the path.
- *
- * Author: Uzair Shamim
- */
-    //Vamsi: Added connects to get episode duration and sync player slider to audio position
-
-    player->setMedia(episodeFile());
-    player->play();
-}
-
 void MainWindow::on_playPodcast_clicked()
 {
     // Get the values selected by the user, this should work regardless of if the widget is model or item based
@@ -610,10 +596,12 @@ void MainWindow::on_playPodcast_clicked()
 
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        playAudio();
+        player->setMedia(episodeFile());
+        player->play();
     }else if (list.length() > 0){
         player->stop();
-        playAudio();
+        player->setMedia(episodeFile());
+        player->play();
     }
 
 }
@@ -660,7 +648,7 @@ void MainWindow::setSliderRange(qint64 duration){
 }
 //Set the postion as the audio plays
 void MainWindow::updatePosition(qint64 timeElapsed){
-    if(!ui->playerSlider->isSliderDown()){
+    if(!ui->playerSlider->isSliderDown() && (qAbs(ui->playerSlider->value() - timeElapsed) < 10)){
         QTime elapsedTime(0,0,0,0);
         ui->playerSlider->setValue(timeElapsed);
         ui->elapsedLabel->setText(elapsedTime.addMSecs(timeElapsed).toString());
@@ -669,8 +657,10 @@ void MainWindow::updatePosition(qint64 timeElapsed){
 //if the user drags the slider, audio position is updated
 void MainWindow::setPosition(int position){
     // avoid seeking when the slider value change is triggered from updatePosition()
-    if (qAbs(player->position() - position) > 99)
+    qDebug() << qAbs(player->position() - position);
+    if (qAbs(player->position() - position) > 10){
         player->setPosition(position);
+    }
 }
 
 //get the file url by parsing xml file.

@@ -105,8 +105,6 @@ private:
     QMediaPlayer *player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
 
     QUrl episodeFile();
-
-    void playAudio();
 };
 
 #endif // MAINWINDOW_H
