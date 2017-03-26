@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>942</width>
-    <height>513</height>
+    <height>517</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,6 +28,9 @@
            </size>
           </property>
           <property name="autoFillBackground">
+           <bool>false</bool>
+          </property>
+          <property name="tracking">
            <bool>false</bool>
           </property>
           <property name="orientation">
@@ -83,14 +86,14 @@
         <item>
          <widget class="QPushButton" name="skip_backward">
           <property name="text">
-           <string>&lt; 15 Sec</string>
+           <string>15 Sec</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="skip_forward">
           <property name="text">
-           <string>15 Sec &gt;</string>
+           <string>15 Sec</string>
           </property>
          </widget>
         </item>
@@ -204,7 +207,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuEdit">

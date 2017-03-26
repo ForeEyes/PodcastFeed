@@ -43,6 +43,20 @@ MainWindow::MainWindow(QWidget *parent) :
     tray->setIcon(QIcon(":/trayIcon.png"));
     tray->setToolTip("PodcastFeed");
     tray->show();
+
+
+    //Set Media Icons
+    ui->playPodcast->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    ui->stopAudio->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
+    ui->skip_forward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
+    ui->skip_backward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
+
+    //Ser Media Connects
+    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));
+    connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
+    connect(ui->playerSlider, SIGNAL(valueChanged(int)), this, SLOT(setPosition(int)));
+
 }
 
 void MainWindow::closeEvent (QCloseEvent *event)
@@ -584,8 +598,7 @@ void MainWindow::playAudio()
  * Author: Uzair Shamim
  */
     //Vamsi: Added connects to get episode duration and sync player slider to audio position
-    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
-    connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
+
     player->setMedia(episodeFile());
     player->play();
 }
@@ -616,10 +629,12 @@ void MainWindow::on_pauseResumeAudio_clicked()
     if(player->state() == QMediaPlayer::PlayingState){
         player->pause();
         ui->pauseResumeAudio->setText("Resume");
+        ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     //Vamsi: If audio is pause then play audio and change text to pause
     }else if(player->state() == QMediaPlayer::PausedState){
         player->play();
         ui->pauseResumeAudio->setText("Pause");
+        ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     }
 }
 
@@ -644,17 +659,18 @@ void MainWindow::setSliderRange(qint64 duration){
     ui->durationLabel->setText("/ " + episodeDuration.addMSecs(duration).toString());
 }
 //Set the postion as the audio plays
-void MainWindow::positionChanged(qint64 timeElapsed){
-    QTime elapsedTime(0,0,0,0);
-    ui->playerSlider->setValue(timeElapsed);
-    ui->elapsedLabel->setText(elapsedTime.addMSecs(timeElapsed).toString());
-}
-//after the user drags the slider, audio position is updated
-void MainWindow::on_playerSlider_sliderReleased()
-{
-    if(player->state() == QMediaPlayer::PlayingState){
-        player->setPosition(ui->playerSlider->value());
+void MainWindow::updatePosition(qint64 timeElapsed){
+    if(!ui->playerSlider->isSliderDown()){
+        QTime elapsedTime(0,0,0,0);
+        ui->playerSlider->setValue(timeElapsed);
+        ui->elapsedLabel->setText(elapsedTime.addMSecs(timeElapsed).toString());
     }
+}
+//if the user drags the slider, audio position is updated
+void MainWindow::setPosition(int position){
+    // avoid seeking when the slider value change is triggered from updatePosition()
+    if (qAbs(player->position() - position) > 99)
+        player->setPosition(position);
 }
 
 //get the file url by parsing xml file.
