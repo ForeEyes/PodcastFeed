@@ -75,7 +75,7 @@ private slots:
 
     void on_stopAudio_clicked();
 
-    void positionChanged(qint64 timeElapsed);
+    void updatePosition(qint64 timeElapsed);
 
     void on_pauseResumeAudio_clicked();
 
@@ -85,7 +85,7 @@ private slots:
 
     void on_playPodcast_clicked();
 
-    void on_playerSlider_sliderReleased();
+    void setPosition(int position);
 
     void displayWindow();
 
@@ -102,11 +102,9 @@ private:
 
     QString appDataFile = appDataFolder + "/podcasts.json";
 
-    QMediaPlayer *player = new QMediaPlayer;
+    QMediaPlayer *player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
 
     QUrl episodeFile();
-
-    void playAudio();
 };
 
 #endif // MAINWINDOW_H
