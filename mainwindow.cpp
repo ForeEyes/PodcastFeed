@@ -640,6 +640,7 @@ void MainWindow::on_skip_forward_clicked()
 void MainWindow::setSliderRange(qint64 duration){
     QTime episodeDuration(0,0,0,0);
     ui->playerSlider->setRange(0, duration);
+    ui->playerSlider->setTickInterval(duration/30);
     ui->durationLabel->setText("/ " + episodeDuration.addMSecs(duration).toString());
 }
 //Set the postion as the audio plays
