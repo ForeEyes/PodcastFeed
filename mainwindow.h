@@ -22,6 +22,8 @@
 
 #include <QCloseEvent>
 #include <QSystemTrayIcon>
+#include <QMenu>
+#include <QAction>
 
 namespace Ui {
 class MainWindow;
@@ -89,6 +91,8 @@ private slots:
 
     void displayWindow();
 
+    void closeWindow();
+
 private:
     Ui::MainWindow *ui;
 
@@ -105,6 +109,8 @@ private:
     QMediaPlayer *player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
 
     QUrl episodeFile();
+
+    bool canClose = false;
 };
 
 #endif // MAINWINDOW_H
