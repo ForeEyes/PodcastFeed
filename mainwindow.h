@@ -19,6 +19,7 @@
 #include <QStandardPaths>
 
 #include <QMediaPlayer>
+#include <QBuffer>
 
 #include <QCloseEvent>
 #include <QSystemTrayIcon>
@@ -93,6 +94,8 @@ private slots:
 
     void closeWindow();
 
+    void bufferPlayEpisode();
+
 private:
     Ui::MainWindow *ui;
 
@@ -111,6 +114,9 @@ private:
     QUrl episodeFile();
 
     bool canClose = false;
+
+    QBuffer immPlay;
+
 };
 
 #endif // MAINWINDOW_H
