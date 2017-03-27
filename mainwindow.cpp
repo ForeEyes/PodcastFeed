@@ -613,14 +613,40 @@ void MainWindow::on_playPodcast_clicked()
 
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        player->setMedia(episodeFile());
-        player->play();
+        ui->statusBar->setStyleSheet("color: red");
+        ui->statusBar->showMessage("Buffering Content, Please Wait...", 2000);
+        bufferPlayEpisode();
     }else if (list.length() > 0){
         player->stop();
-        player->setMedia(episodeFile());
-        player->play();
+        ui->statusBar->setStyleSheet("color: red");
+        ui->statusBar->showMessage("Buffering Content, Please Wait...", 2000);
+        bufferPlayEpisode();
     }
+}
 
+void MainWindow::bufferPlayEpisode(){
+    //Create a event loop to keep everythin inline, rather than using other functions.
+    QEventLoop eventLoop;
+    //create new network manager
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+    //When the http request is finished, end the eventloop
+    QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+
+    QNetworkRequest request;
+    request.setUrl(episodeFile());
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+
+    QNetworkReply *audioReply = manager->get(request);
+    audioReply->setReadBufferSize(0);
+    eventLoop.exec();
+
+    immPlay.open(QBuffer::WriteOnly | QBuffer::Truncate);
+    immPlay.write(audioReply->readAll());
+    immPlay.close();
+
+    immPlay.open(QIODevice::ReadOnly);
+    player->setMedia(QMediaContent(), &immPlay);
+    player->play();
 }
 
 void MainWindow::on_stopAudio_clicked()
