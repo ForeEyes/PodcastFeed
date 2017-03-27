@@ -614,13 +614,15 @@ void MainWindow::on_playPodcast_clicked()
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
         ui->statusBar->setStyleSheet("color: red");
-        ui->statusBar->showMessage("Buffering Content, Please Wait...", 2000);
+        ui->statusBar->showMessage("Buffering Content, Please Wait...");
         bufferPlayEpisode();
+        ui->statusBar->showMessage("Done Buffering!", 3000);
     }else if (list.length() > 0){
         player->stop();
         ui->statusBar->setStyleSheet("color: red");
-        ui->statusBar->showMessage("Buffering Content, Please Wait...", 2000);
+        ui->statusBar->showMessage("Buffering Content, Please Wait...");
         bufferPlayEpisode();
+        ui->statusBar->showMessage("Done Buffering!", 3000);
     }
 }
 
