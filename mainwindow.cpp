@@ -199,8 +199,6 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     QString podcastDescription;
     QStringList Episodes;
 
-
-
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
     QFile xmlFile(podcastFilePath);
@@ -237,7 +235,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
             if(xml.name() == "title" && xml.prefix().isEmpty() && firstSkipped) {
                 Episodes << xml.readElementText();
             }
-            if(xml.name() == "title" && !firstSkipped){
+            if(xml.name() == "item" && !firstSkipped){
                 firstSkipped = true;
             }
         }
