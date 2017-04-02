@@ -60,7 +60,7 @@ private slots:
 
     void parseItunesReply(QNetworkReply *reply);
 
-    void addPodcast(QString rssLink);
+    void addPodcast(QString rssLink, bool actionType);
 
     void storeXmlFile(QString podcastName, QByteArray rawReply);
 

@@ -120,15 +120,35 @@ void MainWindow::on_actionUsing_RSS_Link_triggered()
     //Check if user clicked ok and it the string is empty
     if(ok && !rssLink.isEmpty()){
         //Call addPodcast function and pass rss link
-        addPodcast(rssLink);
+        addPodcast(rssLink, true);
     }
 }
 
 void MainWindow::on_actionRefresh_Feed_triggered()
 {
     //re-download xml files
+    ui->statusBar->showMessage("Refreshing Feed...");
+    //Open json file as read only
+    QFile jsonFile(appDataFile);
+    //if file does not exit return false
+    if(jsonFile.open(QFile::ReadOnly)){
+        //convert all object in the app data file into an array
+        QJsonDocument document = QJsonDocument().fromJson(jsonFile.readAll());
+        QJsonObject jsonObject = document.object();
+        QJsonArray jsonArray = jsonObject["Podcasts"].toArray();
 
-    //re-download icons
+        //go through array and look for the podcast
+        foreach (const QJsonValue & value, jsonArray) {
+            QJsonObject obj = value.toObject();
+
+            addPodcast(obj["rssLink"].toString(), false);
+            }
+
+        ui->statusBar->showMessage("Done Refreshing Feed!", 3000);
+    } else {
+        ui->statusBar->showMessage("Unable to Refresh Feed", 3000);
+    }
+    jsonFile.close();
 
     //re-populate widgets
     updateUIPodcastList();
@@ -179,8 +199,6 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     QString podcastDescription;
     QStringList Episodes;
 
-
-
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
     QFile xmlFile(podcastFilePath);
@@ -217,7 +235,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
             if(xml.name() == "title" && xml.prefix().isEmpty() && firstSkipped) {
                 Episodes << xml.readElementText();
             }
-            if(xml.name() == "title" && !firstSkipped){
+            if(xml.name() == "item" && !firstSkipped){
                 firstSkipped = true;
             }
         }
@@ -370,7 +388,7 @@ void MainWindow::parseItunesReply(QNetworkReply *reply){
                         .toObject().value("feedUrl").toString();
 
         //Call addPodcast function and pass rss link
-        addPodcast(rssLink);
+        addPodcast(rssLink, true);
 
         reply->deleteLater();
     }
@@ -381,7 +399,7 @@ void MainWindow::parseItunesReply(QNetworkReply *reply){
     }
 }
 
-void MainWindow::addPodcast(QString rssLink){
+void MainWindow::addPodcast(QString rssLink, bool actionType){
     //Create a event loop to keep everythin inline, rather than using other functions.
     QEventLoop eventLoop;
     //create new network manager
@@ -433,9 +451,11 @@ void MainWindow::addPodcast(QString rssLink){
         if(!podcastName.isEmpty() && !podcastIconURL.isEmpty()){
             storeXmlFile(podcastName, rawReply);
             storeIcon(podcastName, podcastIconURL);
-            addPodcast_toAppDataFile(podcastName, rssLink);
-            //re-populate widgets
-            updateUIPodcastList();
+            if(actionType){
+                addPodcast_toAppDataFile(podcastName, rssLink);
+                //re-populate widgets
+                updateUIPodcastList();
+            }
         }
 
     } else {
@@ -610,20 +630,23 @@ void MainWindow::on_playPodcast_clicked()
 {
     // Get the values selected by the user, this should work regardless of if the widget is model or item based
     QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
+    //set message color to red
+    ui->statusBar->setStyleSheet("color: red");
 
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        ui->statusBar->setStyleSheet("color: red");
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
         bufferPlayEpisode();
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }else if (list.length() > 0){
         player->stop();
-        ui->statusBar->setStyleSheet("color: red");
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
         bufferPlayEpisode();
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
+    //reset color to default
+    ui->statusBar->setStyleSheet(styleSheet());
+
 }
 
 void MainWindow::bufferPlayEpisode(){
