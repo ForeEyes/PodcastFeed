@@ -773,3 +773,9 @@ QUrl MainWindow::episodeFile()
     return audioFile;
 }
 //end Author:Vamsidhar Allampati
+
+void MainWindow::on_actionQuit_triggered()
+{
+    canClose = true;
+    this->close();
+}
