@@ -88,7 +88,7 @@ private slots:
 
     void on_skip_forward_clicked();
 
-    void on_playPodcast_clicked();
+    void on_playPodcast_clicked(bool blReload);
 
     void setPosition(int position);
 

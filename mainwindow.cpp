@@ -34,8 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
     player->setVolume(ui->volumeSlider->value());
     connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
 
-    LoadSettings();
-
     // Only show minimize button
     //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
@@ -62,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->stopAudio->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui->skip_forward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     ui->skip_backward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
+
+    LoadSettings();
 
     //Set Media Connects
     connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));
@@ -640,7 +640,7 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-void MainWindow::on_playPodcast_clicked()
+void MainWindow::on_playPodcast_clicked(bool blReload)
 {
     QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow_BufferPlay");
@@ -657,11 +657,12 @@ void MainWindow::on_playPodcast_clicked()
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
         //If playPodcast is called with a QURL, load the QUrl instead.
-        if(streamURL.isEmpty()){
-            bufferPlayEpisode(episodeFile());
+        if(blReload){
+            bufferPlayEpisode(streamURL);
+            on_pauseResumeAudio_clicked();
         }
         else{
-            bufferPlayEpisode(streamURL);
+            bufferPlayEpisode(episodeFile());
         }
 
         ui->statusBar->showMessage("Done Buffering!", 3000);
@@ -675,13 +676,13 @@ void MainWindow::on_playPodcast_clicked()
         player->stop();
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
 
-        if(streamURL.isEmpty()){
-            bufferPlayEpisode(episodeFile());
+        if(blReload){
+            bufferPlayEpisode(streamURL);
+            on_pauseResumeAudio_clicked();
         }
         else{
-            bufferPlayEpisode(streamURL);
+            bufferPlayEpisode(episodeFile());
         }
-
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
     //reset color to default
@@ -877,7 +878,7 @@ void MainWindow::LoadSettings(){
                 //ui->EpisodeList->setCurrentRow(setting.value("EpisodeRow").toInt())
         setting.endGroup();
 
-        on_playPodcast_clicked();
+        on_playPodcast_clicked(true);
 
 
         setting.beginGroup("MainWindow");
