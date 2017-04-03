@@ -106,6 +106,7 @@ private slots:
 
     void on_actionLoad_Settings_triggered();
 
+    void on_actionEnable_Buffering_triggered();
 
 private:
     Ui::MainWindow *ui;

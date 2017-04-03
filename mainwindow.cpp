@@ -34,6 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
     player->setVolume(ui->volumeSlider->value());
     connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
 
+    //Buffer Settings relies on the UI by default;
+
+
     // Only show minimize button
     //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
@@ -643,6 +646,10 @@ bool MainWindow::checkPodcastExists(QString podcastName){
 void MainWindow::on_playPodcast_clicked(bool blReload)
 {
     QSettings setting("3PR3", "PodcastFeed");
+    setting.beginGroup("MainWindow");
+        //Sets the boolean to check if buffering is enabled in the UI.
+        bool bufferEnabled = setting.value("BufferingEnabled").toBool();
+    setting.endGroup();
     setting.beginGroup("MainWindow_BufferPlay");
         //Loads and formats the QURL for the previous stream.
         QUrl streamURL = setting.value("curQUrl").toUrl();
@@ -658,11 +665,24 @@ void MainWindow::on_playPodcast_clicked(bool blReload)
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
         //If playPodcast is called with a QURL, load the QUrl instead.
         if(blReload){
-            bufferPlayEpisode(streamURL);
-            on_pauseResumeAudio_clicked();
+            if(bufferEnabled){
+                bufferPlayEpisode(streamURL);
+                on_pauseResumeAudio_clicked();
+            }
+            else{
+                player->setMedia(streamURL);
+                player->play();
+                on_pauseResumeAudio_clicked();
+            }
         }
         else{
-            bufferPlayEpisode(episodeFile());
+            if(bufferEnabled){
+                bufferPlayEpisode(episodeFile());
+            }
+            else{
+                player->setMedia(episodeFile());
+                player->play();
+            }
         }
 
         ui->statusBar->showMessage("Done Buffering!", 3000);
@@ -677,11 +697,28 @@ void MainWindow::on_playPodcast_clicked(bool blReload)
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
 
         if(blReload){
-            bufferPlayEpisode(streamURL);
-            on_pauseResumeAudio_clicked();
+            if(bufferEnabled){
+                bufferPlayEpisode(streamURL);
+                player->pause();
+                //ui->pauseResumeAudio->setText("Resume");
+                //ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+            }
+            else{
+                player->setMedia(streamURL);
+                player->play();
+                player->pause();
+                //ui->pauseResumeAudio->setText("Resume");
+                //ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+            }
         }
         else{
-            bufferPlayEpisode(episodeFile());
+            if(bufferEnabled){
+                bufferPlayEpisode(episodeFile());
+            }
+            else{
+                player->setMedia(episodeFile());
+                player->play();
+            }
         }
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
@@ -838,10 +875,21 @@ void MainWindow::SaveSettings(){
 
     QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow");
+
         //Sets the value for the window size
         setting.setValue("position", this->geometry());
+
+        //Sets the bool setting for if Buffering is enabled or disabled
+        if(ui->actionEnable_Buffering->isChecked()){
+            setting.setValue("BufferingEnabled", true);
+        }
+        else{
+            setting.setValue("BufferingEnabled", false);
+        }
+
         //Sets the volume settings for later
         setting.setValue("volume", player->volume());
+
         //Sets the Media Position of the last playing file.
         setting.setValue("MediaPosition", player->position());
     setting.endGroup();
@@ -857,9 +905,25 @@ void MainWindow::LoadSettings(){
                 //Reloads the position or dimensions of the MainWindow.
                 QRect MainRect = setting.value("position").toRect();
                 setGeometry(MainRect);
+
                 //Loads in the volume last saved in settings and graphically.
                 int intVolume = setting.value("volume").toInt();
                 ui->volumeSlider->setValue(intVolume);
+
+                if(setting.value("BufferingEnabled").toBool() == true){
+                    ui->actionEnable_Buffering->setChecked(true);
+                }
+                else if(setting.value("BufferingEnabled").toBool() == false){
+                    ui->actionEnable_Buffering->setChecked(false);
+                }
+                else{
+                    //Default position when there is no previous setting
+                    ui->actionEnable_Buffering->setChecked(true);
+                    setting.setValue("BufferingEnabled", true);
+                }
+
+                //Sets the bool setting for if Buffering is enabled or disabled
+                setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
 
                 //Still working with this section. Going to change it to Singal and Slot design.
                 //Trying to get the loaded QUrl to show relevant podcast and episode info
@@ -898,4 +962,13 @@ void MainWindow::on_actionLoad_Settings_triggered()
 {
     //Load
     LoadSettings();
+}
+
+void MainWindow::on_actionEnable_Buffering_triggered()
+{
+    QSettings setting("3PR3", "PodcastFeed");
+    setting.beginGroup("MainWindow");
+        //Sets the bool setting for if Buffering is enabled or disabled
+        setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
+    setting.endGroup();
 }

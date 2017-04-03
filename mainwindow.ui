@@ -227,11 +227,18 @@
      <addaction name="actionUsing_Itunes_Link"/>
      <addaction name="actionUsing_RSS_Link"/>
     </widget>
+    <widget class="QMenu" name="menuSettings">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <addaction name="actionSave_Settings"/>
+     <addaction name="actionLoad_Settings"/>
+     <addaction name="actionEnable_Buffering"/>
+    </widget>
     <addaction name="menuAdd_Podcast"/>
     <addaction name="actionRefresh_Feed"/>
     <addaction name="actionRemove_Podcast"/>
-    <addaction name="actionSave_Settings"/>
-    <addaction name="actionLoad_Settings"/>
+    <addaction name="menuSettings"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -276,6 +283,17 @@
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionEnable_Buffering">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Enable Buffering</string>
    </property>
   </action>
  </widget>
