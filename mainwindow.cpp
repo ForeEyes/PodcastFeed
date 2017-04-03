@@ -689,31 +689,6 @@ void MainWindow::on_playPodcast_clicked()
 
 }
 
-/*
-void MainWindow::startupPlayPodcast(QUrl streamURL)
-{
-    // Get the values selected by the user, this should work regardless of if the widget is model or item based
-    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
-    //set message color to red
-    ui->statusBar->setStyleSheet("color: red");
-    // User selected an episode AND the player is not currently playing any audio
-    if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-        ui->statusBar->showMessage("Buffering Previous Content, Please Wait...");
-        bufferPlayEpisode(streamURL);
-        player->pause();
-        ui->statusBar->showMessage("Done Buffering!", 3000);
-        ui->pauseResumeAudio->setText("Resume");
-        ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    }else if (list.length() > 0){
-        player->stop();
-        ui->statusBar->showMessage("Buffering Previous Content, Please Wait...");
-        bufferPlayEpisode(streamURL);
-        ui->statusBar->showMessage("Done Buffering!", 3000);
-    }
-    //reset color to default
-    ui->statusBar->setStyleSheet(styleSheet());
-*/
-
 void MainWindow::bufferPlayEpisode(QUrl streamURL){
     //Create a event loop to keep everythin inline, rather than using other functions.
     QEventLoop eventLoop;
