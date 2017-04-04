@@ -260,6 +260,13 @@
     <addaction name="actionRefresh_Feed"/>
     <addaction name="actionRemove_Podcast"/>
    </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionQuit"/>
+   </widget>
+   <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -281,6 +288,11 @@
   <action name="actionRemove_Podcast">
    <property name="text">
     <string>Remove Podcast</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
    </property>
   </action>
  </widget>
