@@ -114,9 +114,13 @@ private slots:
 
     void on_actionEnable_Buffering_triggered();
 
-    void on_actionSorting_Order_Descending_triggered();
+   // void on_actionSorting_Order_Descending_triggered();
 
-    void on_actionSorting_Order_Ascending_triggered();
+   // void on_actionSorting_Order_Ascending_triggered();
+
+    void on_actionSort_Order_Ascending_triggered();
+
+    void on_actionSort_Order_Descending_triggered();
 
 private:
     Ui::MainWindow *ui;

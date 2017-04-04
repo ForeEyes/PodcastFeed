@@ -267,9 +267,11 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 
     //Trying to figure out why the Ascend / Descend feature no longer works after I added PreviousPlayed feature.
     ui->EpisodeList->clear();
+
         setting.beginGroup("MainWindow");
             if(setting.value("SortOrderAscend") == false){
                 std::reverse(Episodes.begin(), Episodes.end());
+                std::reverse(ListenedEpisodes.begin(), ListenedEpisodes.end());
             }
         setting.endGroup();
 
@@ -912,15 +914,15 @@ void MainWindow::SaveSettings(){
     //Settings are also set in other function when applicable.
     setting.beginGroup("MainWindow");
         //Sets the bool settings for if AscendingSortOrder is enabled or disabled
-        if(ui->actionSorting_Order_Ascending->isEnabled() == true){
+        if(ui->actionSort_Order_Ascending->isEnabled() == true){
             setting.setValue("SortOrderAscend", false);
         }
-        else if(ui->actionSorting_Order_Ascending->isEnabled() == false){
+        else if(ui->actionSort_Order_Ascending->isEnabled() == false){
             setting.setValue("SortOrderAscend", true);
         }
         else{
             //This is the default if there is no setting.
-            setting.setValue("SortOrderAscend", false);
+            setting.setValue("SortOrderAscend", true);
         }
 
         //Sets the bool setting for if Buffering is enabled or disabled
@@ -969,18 +971,22 @@ void MainWindow::LoadSettings(){
                 //SortOrderAscend = fasle means Sort Order is set to Descending
                 if(setting.value("SortOrderAscend").toBool() == true){
                     //If the sort order is currently true for Ascending then you don't need set Ascending anymore.
-                    ui->actionSorting_Order_Ascending->setEnabled(false);
+                    ui->actionSort_Order_Ascending->setEnabled(false);
                     //If the sort order is currently true for Ascending then it means the option of Descending should be available.
-                    ui->actionSorting_Order_Descending->setEnabled(true);
+                    ui->actionSort_Order_Descending->setEnabled(true);
                 }
                 else if(setting.value("SortOrderAscend").toBool() == false){
                     //If the sort order is currently false for Ascending then it means the option of Ascending should be available.
-                    ui->actionSorting_Order_Ascending->setEnabled(true);
+                    ui->actionSort_Order_Ascending->setEnabled(true);
                     //If the sort order is currentl false for Ascending then it means the options of Descending should not be available.
-                    ui->actionSorting_Order_Descending->setEnabled(false);
+                    ui->actionSort_Order_Descending->setEnabled(false);
                 }
                 else{
-                    //Do Nothing.
+                    //If the sort order is currently false for Ascending then it means the option of Ascending should be available.
+                    ui->actionSort_Order_Ascending->setEnabled(true);
+                    //If the sort order is currently false for Ascending then it means the option of Descending should not be available.
+                    ui->actionSort_Order_Descending->setEnabled(false);
+                    setting.setValue("SortOrderAscend", false);
                 }
 
                 //Sets the bool setting for if Buffering is enabled or disabled
@@ -1008,7 +1014,7 @@ void MainWindow::on_actionEnable_Buffering_triggered()
         setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
     setting.endGroup();
 }
-
+/*
 void MainWindow::on_actionSorting_Order_Descending_triggered()
 {
         setting.beginGroup("MainWindow");
@@ -1028,5 +1034,28 @@ void MainWindow::on_actionSorting_Order_Ascending_triggered()
         ui->actionSorting_Order_Ascending->setEnabled(false);
         setting.endGroup();
 }
+*/
 
+void MainWindow::on_actionSort_Order_Ascending_triggered()
+{
+    setting.beginGroup("MainWindow");
+    setting.setValue("SortOrderAscend", true);
+    ui->actionSort_Order_Descending->setEnabled(true);
+    ui->actionSort_Order_Ascending->setEnabled(false);
+    setting.endGroup();
 
+    //Populate the widgets
+    updateUIPodcastList();
+}
+
+void MainWindow::on_actionSort_Order_Descending_triggered()
+{
+    setting.beginGroup("MainWindow");
+    setting.setValue("SortOrderAscend", false);
+    ui->actionSort_Order_Descending->setEnabled(false);
+    ui->actionSort_Order_Ascending->setEnabled(true);
+    setting.endGroup();
+
+    //Populate the widgets
+    updateUIPodcastList();
+}
