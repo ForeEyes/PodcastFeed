@@ -172,7 +172,10 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 {
     QString podcastName = ui->PodcastList->item(index.row())->text();
     QString podcastDescription;
+    QString podcastCategory;
+    QString podcastAuthors;
     QStringList Episodes;
+    QString podcastExplicit;
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
@@ -186,6 +189,8 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     bool firstSkipped = false;
     bool DescReached = false;
     bool explicitReached = false;
+    bool categoryReached = false;
+    bool authorReached = false;
 
     while(!xml.atEnd() && !xml.hasError()) {
         // Read next element
@@ -202,11 +207,19 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
             xml.readNext();
         }
         if(xml.qualifiedName() == "itunes:explicit" && !explicitReached){
-            podcaseExplicit = xml.readElementText();
+            podcastExplicit = xml.readElementText();
             explicitReached = true;
         }
+        if(xml.qualifiedName() == "itunes:category" && !categoryReached){
+            podcastCategory = xml.attributes().value("text").toString();
+            categoryReached = true;
+        }
+        if(xml.qualifiedName() == "itunes:author" && !authorReached){
+            podcastAuthors = xml.readElementText();
+            authorReached = true;
+        }
         if(xml.name() == "description" && !DescReached){
-                podcastDescription += "Podcast Description: \n---------------------------\n";
+                podcastDescription += "<h3>Podcast Description:</h3>";
                 podcastDescription += xml.readElementText();
                 //Check boolean if podcast description has already been taken
                 DescReached = true;
@@ -224,11 +237,20 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     xml.clear();
     xmlFile.close();
 
+    //Merge Data for podcast description
+    QString extraInfo = "<img src=\"" + iconFolder + "/"  + podcastName + ".bmp\""
+                        + " alt=\"Podcast Icon\"" + " width=\"100\"" + " height=\"100\">";
+    extraInfo += "<h3>Category: " + podcastCategory + "</h3>";
+    extraInfo += "<h3>Author(s): " + podcastAuthors + "</h3>";
+    extraInfo += "<h3> Podcast Explicit: " + podcastExplicit + "</h3>";
+    podcastDescription.insert(0, extraInfo);
+
+
     ui->EpisodeList->clear();
     std::reverse(Episodes.begin(), Episodes.end());
     ui->EpisodeList->addItems(Episodes);
     ui->Description->clear();
-    ui->Description->setText(podcastDescription);
+    ui->Description->setHtml(podcastDescription);
 }
 
 void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
@@ -353,11 +375,15 @@ void MainWindow::on_playPodcast_clicked()
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
+        ui->currentlyPlaying->setText(ui->PodcastList->currentItem()->text() + ": "
+                                      + ui->EpisodeList->currentItem()->text());
         bufferPlayEpisode();
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }else if (list.length() > 0){
         player->stop();
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
+        ui->currentlyPlaying->setText(ui->PodcastList->currentItem()->text() + ": "
+                                      + ui->EpisodeList->currentItem()->text());
         bufferPlayEpisode();
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
