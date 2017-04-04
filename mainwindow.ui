@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>942</width>
-    <height>517</height>
+    <height>539</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -213,7 +213,7 @@
      <x>0</x>
      <y>0</y>
      <width>942</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuEdit">
@@ -227,10 +227,37 @@
      <addaction name="actionUsing_Itunes_Link"/>
      <addaction name="actionUsing_RSS_Link"/>
     </widget>
+    <widget class="QMenu" name="menuSettings">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <addaction name="actionSave_Settings"/>
+     <addaction name="actionLoad_Settings"/>
+     <addaction name="actionEnable_Buffering"/>
+    </widget>
+    <widget class="QMenu" name="menuSortingOrder">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="title">
+      <string>Sorting Order</string>
+     </property>
+     <addaction name="actionSort_Order_Ascending"/>
+     <addaction name="actionSort_Order_Descending"/>
+    </widget>
     <addaction name="menuAdd_Podcast"/>
     <addaction name="actionRefresh_Feed"/>
     <addaction name="actionRemove_Podcast"/>
+    <addaction name="menuSettings"/>
+    <addaction name="menuSortingOrder"/>
    </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -252,6 +279,48 @@
   <action name="actionRemove_Podcast">
    <property name="text">
     <string>Remove Podcast</string>
+   </property>
+  </action>
+  <action name="actionSave_Settings">
+   <property name="text">
+    <string>Save_Settings</string>
+   </property>
+  </action>
+  <action name="actionLoad_Settings">
+   <property name="text">
+    <string>Load_Settings</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionEnable_Buffering">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Enable Buffering</string>
+   </property>
+  </action>
+  <action name="actionSort_Order_Ascending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sort Order Ascending</string>
+   </property>
+  </action>
+  <action name="actionSort_Order_Descending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sort Order Descending</string>
    </property>
   </action>
  </widget>

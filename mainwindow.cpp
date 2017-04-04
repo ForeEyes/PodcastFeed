@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+QSettings setting("3PR3", "PodcastFeed");
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -19,6 +21,11 @@ MainWindow::MainWindow(QWidget *parent) :
         QDir().mkdir(xmlFolder);
     }
 
+    //Create a folder for episodes already listened to.
+    if(!QDir().exists(txtListened)){
+        QDir().mkdir(txtListened);
+    }
+
     if(!QDir().exists(iconFolder)){
         QDir().mkdir(iconFolder);
     }
@@ -33,6 +40,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->volumeSlider->setValue(10);
     player->setVolume(ui->volumeSlider->value());
     connect(ui->volumeSlider, SIGNAL(valueChanged(int)), player, SLOT(setVolume(int)));
+
+    //Buffer Settings relies on the UI by default;
+
 
     // Only show minimize button
     //setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
@@ -61,12 +71,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->skip_forward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     ui->skip_backward->setIcon(style()->standardIcon(QStyle::SP_MediaSkipBackward));
 
+    LoadSettings();
+
     //Set Media Connects
     connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(updatePosition(qint64)));
     connect(player, SIGNAL(durationChanged(qint64)), this, SLOT(setSliderRange(qint64)));
     connect(ui->playerSlider, SIGNAL(valueChanged(int)), this, SLOT(setPosition(int)));
-
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -92,10 +104,17 @@ void MainWindow::displayWindow()
 
 void MainWindow::closeWindow()
 {
+    SaveSettings();
+
+    /*
+    setting.beginGroup("MainWindow");
+            setting.setValue("MediaPosition", player->position());
+    setting.endGroup();
+    */
     canClose = true;
+
     this->close();
 }
-
 void MainWindow::on_actionUsing_Itunes_Link_triggered()
 {
     //Bool to tell if user clicked ok on dialog.
@@ -196,8 +215,10 @@ void MainWindow::on_actionRemove_Podcast_triggered()
 void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 {
     QString podcastName = ui->PodcastList->item(index.row())->text();
+
     QString podcastDescription;
     QStringList Episodes;
+    QStringList ListenedEpisodes;
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
@@ -244,17 +265,68 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     xml.clear();
     xmlFile.close();
 
+    //Trying to figure out why the Ascend / Descend feature no longer works after I added PreviousPlayed feature.
     ui->EpisodeList->clear();
-    std::reverse(Episodes.begin(), Episodes.end());
+
+        setting.beginGroup("MainWindow");
+            if(setting.value("SortOrderAscend") == false){
+                std::reverse(Episodes.begin(), Episodes.end());
+                std::reverse(ListenedEpisodes.begin(), ListenedEpisodes.end());
+            }
+        setting.endGroup();
+
     ui->EpisodeList->addItems(Episodes);
+
+    //Takes all the Episodes and checks whether there is already an existing filepath for them.
+    //If the path exists, the episode has already been played
+    foreach(QString epName, Episodes){
+        //Create a filepath to be checked
+        QString filechkPath = txtListened + "/" + podcastName + "/" + epName + ".txt";
+        if(FileExists(filechkPath)){
+            ListenedEpisodes << epName;
+        }
+    }
+
+    //Declareing rowList for both foreach loops
+    QList<QListWidgetItem*> rowList;
+
+    //A QList is created of all the episodeNames that match.
+    //The QList is a list of QListWidgetItems that need their color changed
+    //Since they have been played.
+    foreach(QString epName, ListenedEpisodes){
+        rowList += ui->EpisodeList->findItems(epName, Qt::MatchContains);
+    }
+
+    //For each rowItem in rowList, the row is found and the text color is changed to grey
+    //indicating that it has been previously played.
+    foreach(QListWidgetItem* rowItem, rowList){
+        rowItem->setTextColor(QColor("grey"));
+        int row = ui->EpisodeList->row(rowItem);
+        ui->EpisodeList->item(row)->setTextColor(QColor("grey"));
+    }
+
     ui->Description->clear();
     ui->Description->setText(podcastDescription);
 }
+
+bool MainWindow::FileExists(QString filechkPath){
+    //Use QFileInfo for this filepath
+    QFileInfo filechk(filechkPath);
+
+    if(filechk.exists() && filechk.isFile()){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 
 void MainWindow::on_EpisodeList_clicked(const QModelIndex &index)
 {
     QString podcastName = ui->PodcastList->currentItem()->text();
     QString episodeName = ui->EpisodeList->item(index.row())->text();
+
     QString episodeDescription;
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
@@ -482,6 +554,32 @@ void MainWindow::storeXmlFile(QString podcastName, QByteArray rawReply){
     xmlfile.close();
 }
 
+//This function is used to create a new text file with the appropriate directory and episodename of
+//episodes that have already been successfully played.
+void MainWindow::CreateEpisodeTextFile(QString podcastName, QString episodeName){
+    //Episode text file path
+    QString episodetxtFile = txtListened + "/" + podcastName + "/" + episodeName + ".txt";
+    QString episodetxtPathCreate = txtListened + "/" + podcastName + "/";
+
+    if(!QDir().exists(episodetxtPathCreate)){
+        QDir().mkdir(episodetxtPathCreate);
+    }
+
+    QFile txtfile(episodetxtFile);
+    //Open file and write data
+    if (txtfile.open(QFile::WriteOnly)){
+        //Put duration in here eventually
+        txtfile.write("Duration");
+    }
+    else{
+        ui->statusBar->showMessage("Error creating text file for played song", 3000);
+    }
+
+    //close file
+    txtfile.close();
+}
+
+
 void MainWindow::storeIcon(QString podcastName, QString iconURL){
     //Create a event loop to keep everythin inline, rather than using other functions.
     QEventLoop eventLoop;
@@ -628,6 +726,16 @@ bool MainWindow::checkPodcastExists(QString podcastName){
 
 void MainWindow::on_playPodcast_clicked()
 {
+    setting.beginGroup("MainWindow");
+        //Sets the boolean to check if buffering is enabled in the UI.
+        bool bufferEnabled = setting.value("BufferingEnabled").toBool();
+    setting.endGroup();
+
+    setting.beginGroup("MainWindow_BufferPlay");
+        //Loads and formats the QURL for the previous stream.
+        QUrl streamURL = setting.value("curQUrl").toUrl();
+    setting.endGroup();
+
     // Get the values selected by the user, this should work regardless of if the widget is model or item based
     QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
     //set message color to red
@@ -636,20 +744,32 @@ void MainWindow::on_playPodcast_clicked()
     // User selected an episode AND the player is not currently playing any audio
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
-        bufferPlayEpisode();
+        //If playPodcast is called with a QURL, load the QUrl instead.
+        if(bufferEnabled){
+            bufferPlayEpisode(episodeFile());
+        }
+        else{
+            player->setMedia(episodeFile());
+            player->play();
+        }
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }else if (list.length() > 0){
         player->stop();
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
-        bufferPlayEpisode();
+        if(bufferEnabled){
+            bufferPlayEpisode(episodeFile());
+        }
+        else{
+            player->setMedia(episodeFile());
+            player->play();
+        }
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
     //reset color to default
     ui->statusBar->setStyleSheet(styleSheet());
-
 }
 
-void MainWindow::bufferPlayEpisode(){
+void MainWindow::bufferPlayEpisode(QUrl streamURL){
     //Create a event loop to keep everythin inline, rather than using other functions.
     QEventLoop eventLoop;
     //create new network manager
@@ -658,7 +778,7 @@ void MainWindow::bufferPlayEpisode(){
     QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
     QNetworkRequest request;
-    request.setUrl(episodeFile());
+    request.setUrl(streamURL);
     request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
     QNetworkReply *audioReply = manager->get(request);
@@ -672,12 +792,22 @@ void MainWindow::bufferPlayEpisode(){
     immPlay.open(QIODevice::ReadOnly);
     player->setMedia(QMediaContent(), &immPlay);
     player->play();
+
+    //Set Setting Values for current rows of Podcast and Episode.
+    //Also set the current QURL for the stream.
+    setting.beginGroup("MainWindow_BufferPlay");
+        setting.setValue("PodcastRow", ui->PodcastList->currentRow());
+        setting.setValue("EpisodeRow", ui->EpisodeList->currentRow());
+        setting.setValue("curQUrl", streamURL.toString());
+    setting.endGroup();
+
 }
 
 void MainWindow::on_stopAudio_clicked()
 {
     player->stop();
 }
+
 
 void MainWindow::on_pauseResumeAudio_clicked()
 {
@@ -770,6 +900,141 @@ QUrl MainWindow::episodeFile()
     }
     xmlFile.close();
 
+    //Creates a file when the episode is successfully played.
+    //Used here since relevant podcastName and episodeName is available,
+    //and because the function returns an audio file required for playing.
+    CreateEpisodeTextFile(podcastName, episodeName);
+
     return audioFile;
 }
 //end Author:Vamsidhar Allampati
+
+void MainWindow::SaveSettings(){
+    //Function used for default saving of settings.
+    //Settings are also set in other function when applicable.
+    setting.beginGroup("MainWindow");
+        //Sets the bool settings for if AscendingSortOrder is enabled or disabled
+        if(ui->actionSort_Order_Ascending->isEnabled() == true){
+            setting.setValue("SortOrderAscend", false);
+        }
+        else if(ui->actionSort_Order_Ascending->isEnabled() == false){
+            setting.setValue("SortOrderAscend", true);
+        }
+        else{
+            //This is the default if there is no setting.
+            setting.setValue("SortOrderAscend", true);
+        }
+
+        //Sets the bool setting for if Buffering is enabled or disabled
+        if(ui->actionEnable_Buffering->isChecked()){
+            setting.setValue("BufferingEnabled", true);
+        }
+        else{
+            setting.setValue("BufferingEnabled", false);
+        }
+
+        //Sets the volume settings for later
+        //setting.setValue("volume", player->volume());
+
+        //Sets the Media Position of the last playing file.
+        //setting.setValue("MediaPosition", player->position());
+    setting.endGroup();
+
+    qDebug() << "Settings Saved";
+}
+
+void MainWindow::LoadSettings(){
+    //Load
+        setting.beginGroup("MainWindow");
+
+                //Determines if Buffering is already enabled or disabled in settings and
+                //adjust the UI accordingly.
+                //If there is no setting for Buffering then the default of BufferingEnabled = true
+                //is enabled both in the settings and in the UI so they co-ordinate.
+
+                if(setting.value("BufferingEnabled").toBool() == true){
+                    ui->actionEnable_Buffering->setChecked(true);
+                }
+                else if(setting.value("BufferingEnabled").toBool() == false){
+                    ui->actionEnable_Buffering->setChecked(false);
+                }
+                else{
+                    //Default buffering when there is no previous setting
+                    ui->actionEnable_Buffering->setChecked(true);
+                    setting.setValue("BufferingEnabled", false);
+                }
+
+
+
+                //Determines if SortingOrder is Ascending or Descending;
+                //SortOrderAscend = true means Sort Order is set to Ascending
+                //SortOrderAscend = fasle means Sort Order is set to Descending
+                if(setting.value("SortOrderAscend").toBool() == true){
+                    //If the sort order is currently true for Ascending then you don't need set Ascending anymore.
+                    ui->actionSort_Order_Ascending->setEnabled(false);
+                    //If the sort order is currently true for Ascending then it means the option of Descending should be available.
+                    ui->actionSort_Order_Descending->setEnabled(true);
+                }
+                else if(setting.value("SortOrderAscend").toBool() == false){
+                    //If the sort order is currently false for Ascending then it means the option of Ascending should be available.
+                    ui->actionSort_Order_Ascending->setEnabled(true);
+                    //If the sort order is currentl false for Ascending then it means the options of Descending should not be available.
+                    ui->actionSort_Order_Descending->setEnabled(false);
+                }
+                else{
+                    //If the sort order is currently false for Ascending then it means the option of Ascending should be available.
+                    ui->actionSort_Order_Ascending->setEnabled(true);
+                    //If the sort order is currently false for Ascending then it means the option of Descending should not be available.
+                    ui->actionSort_Order_Descending->setEnabled(false);
+                    setting.setValue("SortOrderAscend", false);
+                }
+
+                //Sets the bool setting for if Buffering is enabled or disabled
+                setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
+        setting.endGroup();
+}
+
+
+void MainWindow::on_actionSave_Settings_triggered()
+{
+    //Save
+    SaveSettings();
+}
+
+void MainWindow::on_actionLoad_Settings_triggered()
+{
+    //Load
+    LoadSettings();
+}
+
+void MainWindow::on_actionEnable_Buffering_triggered()
+{
+    setting.beginGroup("MainWindow");
+        //Sets the bool setting for if Buffering is enabled or disabled
+        setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
+    setting.endGroup();
+}
+
+void MainWindow::on_actionSort_Order_Ascending_triggered()
+{
+    setting.beginGroup("MainWindow");
+    setting.setValue("SortOrderAscend", true);
+    ui->actionSort_Order_Descending->setEnabled(true);
+    ui->actionSort_Order_Ascending->setEnabled(false);
+    setting.endGroup();
+
+    //Populate the widgets
+    updateUIPodcastList();
+}
+
+void MainWindow::on_actionSort_Order_Descending_triggered()
+{
+    setting.beginGroup("MainWindow");
+    setting.setValue("SortOrderAscend", false);
+    ui->actionSort_Order_Descending->setEnabled(false);
+    ui->actionSort_Order_Ascending->setEnabled(true);
+    setting.endGroup();
+
+    //Populate the widgets
+    updateUIPodcastList();
+}
