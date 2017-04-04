@@ -28,6 +28,8 @@
 
 #include <QSettings>
 
+#include <QFileInfo>
+
 namespace Ui {
 class MainWindow;
 }
@@ -54,6 +56,8 @@ private slots:
 
     void on_EpisodeList_clicked(const QModelIndex &index);
 
+    bool FileExists(QString filechkPath);
+
     void updateUIPodcastList();
 
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
@@ -65,6 +69,8 @@ private slots:
     void addPodcast(QString rssLink, bool actionType);
 
     void storeXmlFile(QString podcastName, QByteArray rawReply);
+
+    void CreateEpisodeTextFile(QString podcastName, QString episodeName);
 
     void storeIcon(QString podcastName, QString iconURL);
 
@@ -88,7 +94,7 @@ private slots:
 
     void on_skip_forward_clicked();
 
-    void on_playPodcast_clicked(bool blReload);
+    void on_playPodcast_clicked();
 
     void setPosition(int position);
 
@@ -108,12 +114,18 @@ private slots:
 
     void on_actionEnable_Buffering_triggered();
 
+    void on_actionSorting_Order_Descending_triggered();
+
+    void on_actionSorting_Order_Ascending_triggered();
+
 private:
     Ui::MainWindow *ui;
 
     QNetworkAccessManager *manager;
 
     QString appDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
+
+    QString txtListened = appDataFolder + "/listened";
 
     QString xmlFolder = appDataFolder + "/xml";
 

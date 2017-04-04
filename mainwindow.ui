@@ -235,10 +235,21 @@
      <addaction name="actionLoad_Settings"/>
      <addaction name="actionEnable_Buffering"/>
     </widget>
+    <widget class="QMenu" name="menuSorting_Order_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="title">
+      <string>Sorting Order</string>
+     </property>
+     <addaction name="actionSorting_Order_Ascending"/>
+     <addaction name="actionSorting_Order_Descending"/>
+    </widget>
     <addaction name="menuAdd_Podcast"/>
     <addaction name="actionRefresh_Feed"/>
     <addaction name="actionRemove_Podcast"/>
     <addaction name="menuSettings"/>
+    <addaction name="menuSorting_Order_2"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -294,6 +305,25 @@
    </property>
    <property name="text">
     <string>Enable Buffering</string>
+   </property>
+  </action>
+  <action name="actionSorting_Order_Ascending">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sorting Order Ascending</string>
+   </property>
+  </action>
+  <action name="actionSorting_Order_Descending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sorting Order Descending</string>
    </property>
   </action>
  </widget>

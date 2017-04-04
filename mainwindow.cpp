@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+QSettings setting("3PR3", "PodcastFeed");
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -17,6 +19,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     if(!QDir().exists(xmlFolder)){
         QDir().mkdir(xmlFolder);
+    }
+
+    //Create a folder for episodes already listened to.
+    if(!QDir().exists(txtListened)){
+        QDir().mkdir(txtListened);
     }
 
     if(!QDir().exists(iconFolder)){
@@ -100,8 +107,6 @@ void MainWindow::closeWindow()
     SaveSettings();
 
     /*
-    QSettings setting("3PR3", "PodcastFeed");
-
     setting.beginGroup("MainWindow");
             setting.setValue("MediaPosition", player->position());
     setting.endGroup();
@@ -213,6 +218,7 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
 
     QString podcastDescription;
     QStringList Episodes;
+    QStringList ListenedEpisodes;
 
     QString podcastFilePath = xmlFolder + "/" + podcastName + ".xml";
 
@@ -259,11 +265,58 @@ void MainWindow::on_PodcastList_clicked(const QModelIndex &index)
     xml.clear();
     xmlFile.close();
 
+    //Trying to figure out why the Ascend / Descend feature no longer works after I added PreviousPlayed feature.
     ui->EpisodeList->clear();
-    std::reverse(Episodes.begin(), Episodes.end());
+        setting.beginGroup("MainWindow");
+            if(setting.value("SortOrderAscend") == false){
+                std::reverse(Episodes.begin(), Episodes.end());
+            }
+        setting.endGroup();
+
     ui->EpisodeList->addItems(Episodes);
+
+    //Takes all the Episodes and checks whether there is already an existing filepath for them.
+    //If the path exists, the episode has already been played
+    foreach(QString epName, Episodes){
+        //Create a filepath to be checked
+        QString filechkPath = txtListened + "/" + podcastName + "/" + epName + ".txt";
+        if(FileExists(filechkPath)){
+            ListenedEpisodes << epName;
+        }
+    }
+
+    //Declareing rowList for both foreach loops
+    QList<QListWidgetItem*> rowList;
+
+    //A QList is created of all the episodeNames that match.
+    //The QList is a list of QListWidgetItems that need their color changed
+    //Since they have been played.
+    foreach(QString epName, ListenedEpisodes){
+        rowList += ui->EpisodeList->findItems(epName, Qt::MatchContains);
+    }
+
+    //For each rowItem in rowList, the row is found and the text color is changed to grey
+    //indicating that it has been previously played.
+    foreach(QListWidgetItem* rowItem, rowList){
+        rowItem->setTextColor(QColor("grey"));
+        int row = ui->EpisodeList->row(rowItem);
+        ui->EpisodeList->item(row)->setTextColor(QColor("grey"));
+    }
+
     ui->Description->clear();
     ui->Description->setText(podcastDescription);
+}
+
+bool MainWindow::FileExists(QString filechkPath){
+    //Use QFileInfo for this filepath
+    QFileInfo filechk(filechkPath);
+
+    if(filechk.exists() && filechk.isFile()){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 
@@ -499,6 +552,32 @@ void MainWindow::storeXmlFile(QString podcastName, QByteArray rawReply){
     xmlfile.close();
 }
 
+//This function is used to create a new text file with the appropriate directory and episodename of
+//episodes that have already been successfully played.
+void MainWindow::CreateEpisodeTextFile(QString podcastName, QString episodeName){
+    //Episode text file path
+    QString episodetxtFile = txtListened + "/" + podcastName + "/" + episodeName + ".txt";
+    QString episodetxtPathCreate = txtListened + "/" + podcastName + "/";
+
+    if(!QDir().exists(episodetxtPathCreate)){
+        QDir().mkdir(episodetxtPathCreate);
+    }
+
+    QFile txtfile(episodetxtFile);
+    //Open file and write data
+    if (txtfile.open(QFile::WriteOnly)){
+        //Put duration in here eventually
+        txtfile.write("Duration");
+    }
+    else{
+        ui->statusBar->showMessage("Error creating text file for played song", 3000);
+    }
+
+    //close file
+    txtfile.close();
+}
+
+
 void MainWindow::storeIcon(QString podcastName, QString iconURL){
     //Create a event loop to keep everythin inline, rather than using other functions.
     QEventLoop eventLoop;
@@ -643,13 +722,13 @@ bool MainWindow::checkPodcastExists(QString podcastName){
     return false;
 }
 
-void MainWindow::on_playPodcast_clicked(bool blReload)
+void MainWindow::on_playPodcast_clicked()
 {
-    QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow");
         //Sets the boolean to check if buffering is enabled in the UI.
         bool bufferEnabled = setting.value("BufferingEnabled").toBool();
     setting.endGroup();
+
     setting.beginGroup("MainWindow_BufferPlay");
         //Loads and formats the QURL for the previous stream.
         QUrl streamURL = setting.value("curQUrl").toUrl();
@@ -664,67 +743,28 @@ void MainWindow::on_playPodcast_clicked(bool blReload)
     if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
         //If playPodcast is called with a QURL, load the QUrl instead.
-        if(blReload){
-            if(bufferEnabled){
-                bufferPlayEpisode(streamURL);
-                on_pauseResumeAudio_clicked();
-            }
-            else{
-                player->setMedia(streamURL);
-                player->play();
-                on_pauseResumeAudio_clicked();
-            }
+        if(bufferEnabled){
+            bufferPlayEpisode(episodeFile());
         }
         else{
-            if(bufferEnabled){
-                bufferPlayEpisode(episodeFile());
-            }
-            else{
-                player->setMedia(episodeFile());
-                player->play();
-            }
+            player->setMedia(episodeFile());
+            player->play();
         }
-
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }else if (list.length() > 0){
-
-        //Record the MediaPosition in QSettings:
-        setting.beginGroup("MainWindow");
-                setting.setValue("MediaPosition", player->position());
-        setting.endGroup();
-
         player->stop();
         ui->statusBar->showMessage("Buffering Content, Please Wait...");
-
-        if(blReload){
-            if(bufferEnabled){
-                bufferPlayEpisode(streamURL);
-                player->pause();
-                //ui->pauseResumeAudio->setText("Resume");
-                //ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-            }
-            else{
-                player->setMedia(streamURL);
-                player->play();
-                player->pause();
-                //ui->pauseResumeAudio->setText("Resume");
-                //ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-            }
+        if(bufferEnabled){
+            bufferPlayEpisode(episodeFile());
         }
         else{
-            if(bufferEnabled){
-                bufferPlayEpisode(episodeFile());
-            }
-            else{
-                player->setMedia(episodeFile());
-                player->play();
-            }
+            player->setMedia(episodeFile());
+            player->play();
         }
         ui->statusBar->showMessage("Done Buffering!", 3000);
     }
     //reset color to default
     ui->statusBar->setStyleSheet(styleSheet());
-
 }
 
 void MainWindow::bufferPlayEpisode(QUrl streamURL){
@@ -753,7 +793,6 @@ void MainWindow::bufferPlayEpisode(QUrl streamURL){
 
     //Set Setting Values for current rows of Podcast and Episode.
     //Also set the current QURL for the stream.
-    QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow_BufferPlay");
         setting.setValue("PodcastRow", ui->PodcastList->currentRow());
         setting.setValue("EpisodeRow", ui->EpisodeList->currentRow());
@@ -764,12 +803,6 @@ void MainWindow::bufferPlayEpisode(QUrl streamURL){
 
 void MainWindow::on_stopAudio_clicked()
 {
-    //Set the MediaPosition setting during the stopping of Audio.
-    QSettings setting("3PR3", "PodcastFeed");
-    setting.beginGroup("MainWindow");
-            setting.setValue("MediaPosition", player->position());
-    setting.endGroup();
-
     player->stop();
 }
 
@@ -865,6 +898,11 @@ QUrl MainWindow::episodeFile()
     }
     xmlFile.close();
 
+    //Creates a file when the episode is successfully played.
+    //Used here since relevant podcastName and episodeName is available,
+    //and because the function returns an audio file required for playing.
+    CreateEpisodeTextFile(podcastName, episodeName);
+
     return audioFile;
 }
 //end Author:Vamsidhar Allampati
@@ -872,12 +910,18 @@ QUrl MainWindow::episodeFile()
 void MainWindow::SaveSettings(){
     //Function used for default saving of settings.
     //Settings are also set in other function when applicable.
-
-    QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow");
-
-        //Sets the value for the window size
-        setting.setValue("position", this->geometry());
+        //Sets the bool settings for if AscendingSortOrder is enabled or disabled
+        if(ui->actionSorting_Order_Ascending->isEnabled() == true){
+            setting.setValue("SortOrderAscend", false);
+        }
+        else if(ui->actionSorting_Order_Ascending->isEnabled() == false){
+            setting.setValue("SortOrderAscend", true);
+        }
+        else{
+            //This is the default if there is no setting.
+            setting.setValue("SortOrderAscend", false);
+        }
 
         //Sets the bool setting for if Buffering is enabled or disabled
         if(ui->actionEnable_Buffering->isChecked()){
@@ -888,10 +932,10 @@ void MainWindow::SaveSettings(){
         }
 
         //Sets the volume settings for later
-        setting.setValue("volume", player->volume());
+        //setting.setValue("volume", player->volume());
 
         //Sets the Media Position of the last playing file.
-        setting.setValue("MediaPosition", player->position());
+        //setting.setValue("MediaPosition", player->position());
     setting.endGroup();
 
     qDebug() << "Settings Saved";
@@ -899,16 +943,12 @@ void MainWindow::SaveSettings(){
 
 void MainWindow::LoadSettings(){
     //Load
-    QSettings setting("3PR3", "PodcastFeed");
-
         setting.beginGroup("MainWindow");
-                //Reloads the position or dimensions of the MainWindow.
-                QRect MainRect = setting.value("position").toRect();
-                setGeometry(MainRect);
 
-                //Loads in the volume last saved in settings and graphically.
-                int intVolume = setting.value("volume").toInt();
-                ui->volumeSlider->setValue(intVolume);
+                //Determines if Buffering is already enabled or disabled in settings and
+                //adjust the UI accordingly.
+                //If there is no setting for Buffering then the default of BufferingEnabled = true
+                //is enabled both in the settings and in the UI so they co-ordinate.
 
                 if(setting.value("BufferingEnabled").toBool() == true){
                     ui->actionEnable_Buffering->setChecked(true);
@@ -917,40 +957,37 @@ void MainWindow::LoadSettings(){
                     ui->actionEnable_Buffering->setChecked(false);
                 }
                 else{
-                    //Default position when there is no previous setting
+                    //Default buffering when there is no previous setting
                     ui->actionEnable_Buffering->setChecked(true);
-                    setting.setValue("BufferingEnabled", true);
+                    setting.setValue("BufferingEnabled", false);
+                }
+
+
+
+                //Determines if SortingOrder is Ascending or Descending;
+                //SortOrderAscend = true means Sort Order is set to Ascending
+                //SortOrderAscend = fasle means Sort Order is set to Descending
+                if(setting.value("SortOrderAscend").toBool() == true){
+                    //If the sort order is currently true for Ascending then you don't need set Ascending anymore.
+                    ui->actionSorting_Order_Ascending->setEnabled(false);
+                    //If the sort order is currently true for Ascending then it means the option of Descending should be available.
+                    ui->actionSorting_Order_Descending->setEnabled(true);
+                }
+                else if(setting.value("SortOrderAscend").toBool() == false){
+                    //If the sort order is currently false for Ascending then it means the option of Ascending should be available.
+                    ui->actionSorting_Order_Ascending->setEnabled(true);
+                    //If the sort order is currentl false for Ascending then it means the options of Descending should not be available.
+                    ui->actionSorting_Order_Descending->setEnabled(false);
+                }
+                else{
+                    //Do Nothing.
                 }
 
                 //Sets the bool setting for if Buffering is enabled or disabled
                 setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
-
-                //Still working with this section. Going to change it to Singal and Slot design.
-                //Trying to get the loaded QUrl to show relevant podcast and episode info
-                //in the ui.
-                int podcastRow = setting.value("PodcastRow").toInt();
-                QListWidgetItem* itemPodcast = ui->PodcastList->item(podcastRow);
-                ui->PodcastList->setCurrentItem(itemPodcast);
-                const QModelIndex PodcastIndex = ui->PodcastList->currentIndex();
-                on_PodcastList_clicked(PodcastIndex);
-
-                int episodeRow = setting.value("EpisodeRow").toInt();
-                QListWidgetItem* itemEpisode = ui->EpisodeList->item(episodeRow);
-                ui->EpisodeList->setCurrentItem(itemEpisode);
-                const QModelIndex EpisodeIndex = ui->EpisodeList->currentIndex();
-                on_EpisodeList_clicked(EpisodeIndex);
-                //ui->EpisodeList->setCurrentRow(setting.value("EpisodeRow").toInt())
-        setting.endGroup();
-
-        on_playPodcast_clicked(true);
-
-
-        setting.beginGroup("MainWindow");
-                //Set the media position after loading the correct Url Stream.
-                qint64 MediaPosition = setting.value("MediaPosition").toLongLong();
-                setPosition(MediaPosition);
         setting.endGroup();
 }
+
 
 void MainWindow::on_actionSave_Settings_triggered()
 {
@@ -966,9 +1003,30 @@ void MainWindow::on_actionLoad_Settings_triggered()
 
 void MainWindow::on_actionEnable_Buffering_triggered()
 {
-    QSettings setting("3PR3", "PodcastFeed");
     setting.beginGroup("MainWindow");
         //Sets the bool setting for if Buffering is enabled or disabled
         setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
     setting.endGroup();
 }
+
+void MainWindow::on_actionSorting_Order_Descending_triggered()
+{
+        setting.beginGroup("MainWindow");
+        setting.value("SortOrderAscend", false);
+        ui->actionSorting_Order_Descending->setEnabled(false);
+        ui->actionSorting_Order_Ascending->setEnabled(true);
+        setting.endGroup();
+}
+
+
+
+void MainWindow::on_actionSorting_Order_Ascending_triggered()
+{
+        setting.beginGroup("MainWindow");
+        setting.value("SortOrderAscend", true);
+        ui->actionSorting_Order_Descending->setEnabled(true);
+        ui->actionSorting_Order_Ascending->setEnabled(false);
+        setting.endGroup();
+}
+
+
