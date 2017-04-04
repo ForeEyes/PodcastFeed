@@ -26,6 +26,8 @@
 #include <QMenu>
 #include <QAction>
 
+#include "podcastmanager.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -55,22 +57,6 @@ private slots:
     void updateUIPodcastList();
 
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
-
-    void getRSSurl(QString itunesLink);
-
-    void parseItunesReply(QNetworkReply *reply);
-
-    void addPodcast(QString rssLink, bool actionType);
-
-    void storeXmlFile(QString podcastName, QByteArray rawReply);
-
-    void storeIcon(QString podcastName, QString iconURL);
-
-    void addPodcast_toAppDataFile(QString podcastName, QString rssLink);
-
-    void removePodcast_fromAppDataFile(QString podcastName);
-
-    bool checkPodcastExists(QString podcastName);
 
     void closeEvent (QCloseEvent *event);
 
@@ -111,9 +97,13 @@ private:
 
     QString appDataFile = appDataFolder + "/podcasts.json";
 
+    PodcastManager podcastMgr;
+
     QMediaPlayer *player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
 
     QUrl episodeFile();
+
+    void refreshPodcasts();
 
     bool canClose = false;
 
