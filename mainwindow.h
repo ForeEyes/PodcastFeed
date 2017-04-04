@@ -26,6 +26,8 @@
 #include <QMenu>
 #include <QAction>
 
+#include <QSettings>
+
 namespace Ui {
 class MainWindow;
 }
@@ -86,7 +88,7 @@ private slots:
 
     void on_skip_forward_clicked();
 
-    void on_playPodcast_clicked();
+    void on_playPodcast_clicked(bool blReload);
 
     void setPosition(int position);
 
@@ -94,7 +96,17 @@ private slots:
 
     void closeWindow();
 
-    void bufferPlayEpisode();
+    void bufferPlayEpisode(QUrl streamURL);
+
+    void SaveSettings();
+
+    void LoadSettings();
+
+    void on_actionSave_Settings_triggered();
+
+    void on_actionLoad_Settings_triggered();
+
+    void on_actionEnable_Buffering_triggered();
 
 private:
     Ui::MainWindow *ui;
