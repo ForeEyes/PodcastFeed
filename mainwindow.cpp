@@ -1014,27 +1014,6 @@ void MainWindow::on_actionEnable_Buffering_triggered()
         setting.setValue("BufferingEnabled", ui->actionEnable_Buffering->isChecked());
     setting.endGroup();
 }
-/*
-void MainWindow::on_actionSorting_Order_Descending_triggered()
-{
-        setting.beginGroup("MainWindow");
-        setting.value("SortOrderAscend", false);
-        ui->actionSorting_Order_Descending->setEnabled(false);
-        ui->actionSorting_Order_Ascending->setEnabled(true);
-        setting.endGroup();
-}
-
-
-
-void MainWindow::on_actionSorting_Order_Ascending_triggered()
-{
-        setting.beginGroup("MainWindow");
-        setting.value("SortOrderAscend", true);
-        ui->actionSorting_Order_Descending->setEnabled(true);
-        ui->actionSorting_Order_Ascending->setEnabled(false);
-        setting.endGroup();
-}
-*/
 
 void MainWindow::on_actionSort_Order_Ascending_triggered()
 {
