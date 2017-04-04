@@ -776,6 +776,5 @@ QUrl MainWindow::episodeFile()
 
 void MainWindow::on_actionQuit_triggered()
 {
-    canClose = true;
-    this->close();
+    closeWindow()
 }
