@@ -480,6 +480,8 @@ void MainWindow::on_playPodcast_clicked()
     if(!podcastName.isEmpty() && !episodeName.isEmpty()){
        if(player->state() == QMediaPlayer::PlayingState){
            player->stop();
+
+       } else if (player->state() == QMediaPlayer::PausedState){
            ui->pauseResumeAudio->setText("Pause");
            ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
        }
@@ -534,6 +536,8 @@ void MainWindow::bufferPlayEpisode(){
 void MainWindow::on_stopAudio_clicked()
 {
     player->stop();
+    ui->pauseResumeAudio->setText("Pause");
+    ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 }
 
 void MainWindow::on_pauseResumeAudio_clicked()
