@@ -563,13 +563,17 @@ void MainWindow::on_pauseResumeAudio_clicked()
 void MainWindow::on_skip_backward_clicked()
 {
     //Vamsi: Skip backward by 15 seconds
-    player->setPosition(player->position() - (15*1000));
+    if(player->state() == QMediaPlayer::PlayingState){
+        player->setPosition(player->position() - (15*1000));
+    }
 }
 
 void MainWindow::on_skip_forward_clicked()
 {
     //Vamsi: Skip ahead by 15 seconds
-    player->setPosition(player->position() + (15*1000));
+    if(player->state() == QMediaPlayer::PlayingState){
+        player->setPosition(player->position() + (15*1000));
+    }
 }
 
 //Author:Vamsidhar Allampati
