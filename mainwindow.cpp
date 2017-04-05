@@ -506,7 +506,7 @@ void MainWindow::on_playPodcast_clicked()
            }
 
            ui->statusBar->showMessage("Done Buffering!", 3000);
-   }
+        }
 
     //reset color to default
     ui->statusBar->setStyleSheet(styleSheet());
