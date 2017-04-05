@@ -538,6 +538,7 @@ void MainWindow::on_stopAudio_clicked()
     player->stop();
     ui->pauseResumeAudio->setText("Pause");
     ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    ui->currentlyPlaying->clear();
 }
 
 void MainWindow::on_pauseResumeAudio_clicked()
