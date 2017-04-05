@@ -456,12 +456,16 @@ void MainWindow::CreateEpisodeTextFile(QString podcastName, QString episodeName)
 void MainWindow::on_playPodcast_clicked()
 {
     //Declarations
-    QString podcastName = ui->PodcastList->currentItem()->text();
-    QString episodeName = ui->EpisodeList->currentItem()->text();
-    int episodeRow = ui->EpisodeList->currentRow();
-    
-    // Get the values selected by the user, this should work regardless of if the widget is model or item based
-    QModelIndexList list = ui->EpisodeList->selectionModel()->selectedIndexes();
+    QString podcastName;
+    QString episodeName;
+    int episodeRow;
+    if(ui->PodcastList->selectedItems().size() != 0){
+        podcastName = ui->PodcastList->currentItem()->text();
+    }
+    if(ui->EpisodeList->selectedItems().size() != 0){
+        episodeName = ui->EpisodeList->currentItem()->text();
+        episodeRow = ui->EpisodeList->currentRow();
+    }
     
     //set message color to red
     ui->statusBar->setStyleSheet("color: red");
@@ -473,46 +477,31 @@ void MainWindow::on_playPodcast_clicked()
 
 
     // User selected an episode AND the player is not currently playing any audio
-       if(list.length() > 0 && player->state() == QMediaPlayer::StoppedState){
-           //Creates the appropriate text file and path for the episode.
-           CreateEpisodeTextFile(podcastName, episodeName);
-           
-           ui->statusBar->showMessage("Buffering Content, Please Wait...");
-           ui->currentlyPlaying->setText(podcastName + ": "
-                                         + episodeName);
-           
-           if(bufferEnabled){
-               bufferPlayEpisode();
-           }
-           else{
-               player->setMedia(episodeFile());
-               player->play();
-           }
-
-           ui->statusBar->showMessage("Done Buffering!", 3000);
-       }else if (list.length() > 0){
-           //Creates the appropriate text file and path for the episode.
-           CreateEpisodeTextFile(podcastName, episodeName);
+    if(!podcastName.isEmpty() && !episodeName.isEmpty()){
+       if(player->state() == QMediaPlayer::PlayingState){
            player->stop();
-           ui->statusBar->showMessage("Buffering Content, Please Wait...");
-           ui->currentlyPlaying->setText(podcastName + ": "
-                                         + episodeName);
-           if(bufferEnabled){
-               bufferPlayEpisode();
-           }
-           else{
-               player->setMedia(episodeFile());
-               player->play();
-           }
+       }
+       //Creates the appropriate text file and path for the episode.
+       CreateEpisodeTextFile(podcastName, episodeName);
 
-           ui->statusBar->showMessage("Done Buffering!", 3000);
-        }
+       ui->statusBar->showMessage("Buffering Content, Please Wait...");
+       ui->currentlyPlaying->setText(podcastName + ": "
+                                     + episodeName);
 
+       if(bufferEnabled){
+           bufferPlayEpisode();
+       }
+       else{
+           player->setMedia(episodeFile());
+           player->play();
+       }
+    ui->statusBar->showMessage("Done Buffering!", 3000);
     //reset color to default
     ui->statusBar->setStyleSheet(styleSheet());
-    
+
     //Changes the color of the current episodeRow in the EpisodeList to grey.
     ui->EpisodeList->item(episodeRow)->setTextColor(QColor("grey"));
+    }
 }
 
 void MainWindow::bufferPlayEpisode(){
