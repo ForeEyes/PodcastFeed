@@ -94,10 +94,6 @@ private slots:
 
     void LoadSettings();
 
-    void on_actionSave_Settings_triggered();
-
-    void on_actionLoad_Settings_triggered();
-
     void on_actionEnable_Buffering_triggered();
 
     void on_actionSort_Order_Ascending_triggered();

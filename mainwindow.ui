@@ -242,7 +242,7 @@
      <x>0</x>
      <y>0</y>
      <width>907</width>
-     <height>26</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuEdit">
@@ -309,7 +309,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Sort Order Ascending</string>
+    <string>Newest to Oldest</string>
    </property>
   </action>
   <action name="actionSort_Order_Descending">
@@ -317,7 +317,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Sort Order Descending</string>
+    <string>Oldest to Newest</string>
    </property>
   </action>
   <action name="actionBuffering">
