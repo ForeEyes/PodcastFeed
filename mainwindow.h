@@ -26,6 +26,10 @@
 #include <QMenu>
 #include <QAction>
 
+#include <QSettings>
+
+#include <QFileInfo>
+
 #include "podcastmanager.h"
 
 namespace Ui {
@@ -58,6 +62,8 @@ private slots:
 
     QString addPodcast_dlg(QString Label, QString Title, bool &ok);
 
+    void CreateEpisodeTextFile(QString podcastName, QString episodeName);
+
     void closeEvent (QCloseEvent *event);
 
     void setSliderRange(qint64 duration);
@@ -82,6 +88,18 @@ private slots:
 
     void bufferPlayEpisode();
 
+    bool FileExists(QString filechkPath);
+
+    void SaveSettings();
+
+    void LoadSettings();
+
+    void on_actionEnable_Buffering_triggered();
+
+    void on_actionSort_Order_Ascending_triggered();
+
+    void on_actionSort_Order_Descending_triggered();
+
     void on_actionQuit_triggered();
 
 private:
@@ -92,6 +110,8 @@ private:
     QString appDataFolder = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/PodcastFeed";
 
     QString xmlFolder = appDataFolder + "/xml";
+
+    QString txtListened = appDataFolder + "/listened";
 
     QString iconFolder = appDataFolder + "/icons";
 
@@ -108,7 +128,6 @@ private:
     bool canClose = false;
 
     QBuffer immPlay;
-
 };
 
 #endif // MAINWINDOW_H

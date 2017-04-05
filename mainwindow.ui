@@ -20,7 +20,7 @@
       <x>20</x>
       <y>9</y>
       <width>864</width>
-      <height>480</height>
+      <height>497</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
@@ -256,9 +256,18 @@
      <addaction name="actionUsing_Itunes_Link"/>
      <addaction name="actionUsing_RSS_Link"/>
     </widget>
+    <widget class="QMenu" name="menuSorting_Order">
+     <property name="title">
+      <string>Sorting Order</string>
+     </property>
+     <addaction name="actionSort_Order_Ascending"/>
+     <addaction name="actionSort_Order_Descending"/>
+    </widget>
     <addaction name="menuAdd_Podcast"/>
     <addaction name="actionRefresh_Feed"/>
     <addaction name="actionRemove_Podcast"/>
+    <addaction name="menuSorting_Order"/>
+    <addaction name="actionEnable_Buffering"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -293,6 +302,44 @@
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionSort_Order_Ascending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Newest to Oldest</string>
+   </property>
+  </action>
+  <action name="actionSort_Order_Descending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Oldest to Newest</string>
+   </property>
+  </action>
+  <action name="actionBuffering">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Buffering</string>
+   </property>
+  </action>
+  <action name="actionEnable_Buffering">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable Buffering</string>
    </property>
   </action>
  </widget>
