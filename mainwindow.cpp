@@ -728,19 +728,6 @@ void MainWindow::LoadSettings(){
         setting.endGroup();
 }
 
-
-void MainWindow::on_actionSave_Settings_triggered()
-{
-    //Save
-    SaveSettings();
-}
-
-void MainWindow::on_actionLoad_Settings_triggered()
-{
-    //Load
-    LoadSettings();
-}
-
 void MainWindow::on_actionEnable_Buffering_triggered()
 {
     setting.beginGroup("MainWindow");
