@@ -18,8 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     //Create a folder for episodes already listened to.
-        if(!QDir().exists(txtListened)){
-            QDir().mkdir(txtListened);
+    if(!QDir().exists(txtListened)){
+        QDir().mkdir(txtListened);
     }
 
     if(!QDir().exists(xmlFolder)){
@@ -768,4 +768,20 @@ void MainWindow::on_actionQuit_triggered()
     SaveSettings();
 
     closeWindow();
+}
+
+void MainWindow::on_actionClear_History_triggered()
+{
+    QDir history(txtListened);
+    if(history.removeRecursively()){
+        //recreatie the Folder
+        if(!QDir().exists(txtListened)){
+            QDir().mkdir(txtListened);
+        }
+        updateUIPodcastList();
+        ui->statusBar->showMessage("History Cleared!");
+    } else {
+        updateUIPodcastList();
+        ui->statusBar->showMessage("Unable to clear History...");
+    }
 }
