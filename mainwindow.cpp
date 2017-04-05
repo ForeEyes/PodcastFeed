@@ -480,6 +480,8 @@ void MainWindow::on_playPodcast_clicked()
     if(!podcastName.isEmpty() && !episodeName.isEmpty()){
        if(player->state() == QMediaPlayer::PlayingState){
            player->stop();
+           ui->pauseResumeAudio->setText("Pause");
+           ui->pauseResumeAudio->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
        }
        //Creates the appropriate text file and path for the episode.
        CreateEpisodeTextFile(podcastName, episodeName);
