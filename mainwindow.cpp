@@ -696,7 +696,7 @@ void MainWindow::LoadSettings(){
                 }
                 else{
                     //Default buffering when there is no previous setting
-                    ui->actionEnable_Buffering->setChecked(true);
+                    ui->actionEnable_Buffering->setChecked(false);
                     setting.setValue("BufferingEnabled", false);
                 }
 
