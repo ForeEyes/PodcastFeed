@@ -102,6 +102,8 @@ private slots:
 
     void on_actionQuit_triggered();
 
+    void on_actionClear_History_triggered();
+
 private:
     Ui::MainWindow *ui;
 

@@ -268,6 +268,8 @@
     <addaction name="actionRemove_Podcast"/>
     <addaction name="menuSorting_Order"/>
     <addaction name="actionEnable_Buffering"/>
+    <addaction name="separator"/>
+    <addaction name="actionClear_History"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -329,6 +331,11 @@
    </property>
    <property name="text">
     <string>Enable Manual Buffer</string>
+   </property>
+  </action>
+  <action name="actionClear_History">
+   <property name="text">
+    <string>Clear History</string>
    </property>
   </action>
  </widget>
