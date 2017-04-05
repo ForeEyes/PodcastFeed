@@ -677,8 +677,6 @@ void MainWindow::SaveSettings(){
         //Sets the Media Position of the last playing file.
         //setting.setValue("MediaPosition", player->position());
     setting.endGroup();
-
-    qDebug() << "Settings Saved";
 }
 
 void MainWindow::LoadSettings(){

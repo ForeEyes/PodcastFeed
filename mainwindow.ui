@@ -320,17 +320,6 @@
     <string>Oldest to Newest</string>
    </property>
   </action>
-  <action name="actionBuffering">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Buffering</string>
-   </property>
-  </action>
   <action name="actionEnable_Buffering">
    <property name="checkable">
     <bool>true</bool>
@@ -339,7 +328,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Enable Buffering</string>
+    <string>Enable Manual Buffer</string>
    </property>
   </action>
  </widget>
