@@ -1,0 +1,5 @@
+1) unzip the file PodcastFeed_32bit_1.0.1.zip
+2) go to the relase folder
+3) run the podcastfeed.exe file
+4) If there is a msvcp140.dll missing error, then run the vcredist_x86.exe file
+    inorder to install the visual studio 2015 redistributable.
