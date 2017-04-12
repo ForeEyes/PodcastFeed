@@ -20,3 +20,4 @@ The media player will have standard play/pause buttons, a label showing the curr
 
 ### Illustration: ###
 ![picture alt](https://github.com/ForeEyes/PodcastFeed/blob/master/readme%20illustration/Illustration.PNG)
+![picture alt](https://github.com/ForeEyes/PodcastFeed/blob/master/readme%20illustration/Current_View.PNG)
